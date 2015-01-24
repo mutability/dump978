@@ -22,14 +22,27 @@
 #include <math.h>
 #include <unistd.h>
 
+#include "fec/rs.h"
+
+void *rs_uplink;
+void *rs_adsb_short;
+void *rs_adsb_long;
+
 void make_atan2_table();
 void read_from_stdin();
 int process_buffer(uint8_t *input, int len, uint64_t offset);
 int decode_adsb_frame(uint8_t *input);
 int decode_uplink_frame(uint8_t *input);
 
+#define UPLINK_POLY 0x187
+#define ADSB_POLY 0x187
+
 int main(int argc, char **argv)
 {
+    rs_adsb_short = init_rs_char(8, /* gfpoly */ UPLINK_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 12, /* pad */ 225);
+    rs_adsb_long  = init_rs_char(8, /* gfpoly */ UPLINK_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 14, /* pad */ 207);
+    rs_uplink     = init_rs_char(8, /* gfpoly */ UPLINK_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 20, /* pad */ 163);
+
     make_atan2_table();
     read_from_stdin();
     return 0;
@@ -580,6 +593,8 @@ int decode_adsb_frame(uint8_t *input)
     uint8_t framedata[ADSB_FRAME_LENGTH/8];
     int16_t average_dphi;
     int mdb_type;
+    int n_corrected;
+    int corrected_pos[14];
 
     if (!find_average_dphi(input-36*4, ADSB_SYNC_WORD, &average_dphi)) {
         fprintf(stdout, " (abandoned)\n");
@@ -610,8 +625,20 @@ int decode_adsb_frame(uint8_t *input)
 
         fprintf(stdout, "\n");
 
-        decode_header(framedata);
-        decode_state_vector(framedata);
+        n_corrected = decode_rs_char(rs_adsb_short, framedata, corrected_pos, 0);
+        if (n_corrected >= 0) {
+            if (n_corrected > 0) {
+                fprintf(stdout, "-> corrected symbols at [");
+                for (i = 0; i < n_corrected; ++i)
+                    fprintf(stdout, " %d", corrected_pos[i]);
+                fprintf(stdout, " ]\n");
+            }
+            
+            decode_header(framedata);
+            decode_state_vector(framedata);
+        } else {
+            fprintf(stdout, "-> uncorrectable error; skipping\n");
+        }
 
         return (144+96)*4;
     }
@@ -627,13 +654,25 @@ int decode_adsb_frame(uint8_t *input)
     
     fprintf(stdout, "\n");
 
-    decode_header(framedata);
-    if (mdb_type <= 10)
-        decode_state_vector(framedata);
-    if (mdb_type == 1 || mdb_type == 2 || mdb_type == 5 || mdb_type == 6)
-        decode_aux_state_vector(framedata);
-    if (mdb_type == 1 || mdb_type == 3)
-        decode_mode_status(framedata);
+    n_corrected = decode_rs_char(rs_adsb_long, framedata, corrected_pos, 0);
+    if (n_corrected >= 0) {
+        if (n_corrected > 0) {
+            fprintf(stdout, "-> corrected symbols at [");
+            for (i = 0; i < n_corrected; ++i)
+                fprintf(stdout, " %d", corrected_pos[i]);
+            fprintf(stdout, " ]\n");
+        }
+        
+        decode_header(framedata);
+        if (mdb_type <= 10)
+            decode_state_vector(framedata);
+        if (mdb_type == 1 || mdb_type == 2 || mdb_type == 5 || mdb_type == 6)
+            decode_aux_state_vector(framedata);
+        if (mdb_type == 1 || mdb_type == 3)
+            decode_mode_status(framedata);
+    } else {
+        fprintf(stdout, "-> uncorrectable error; skipping\n");
+    }
     
     return (272+112)*4;
 }
@@ -718,6 +757,7 @@ int decode_uplink_frame(uint8_t *input)
     uint8_t framedata[UPLINK_FRAME_LENGTH/8];
     int16_t average_dphi;
     uint8_t deinterleaved[432];
+    int failed = 0;
 
     if (!find_average_dphi(input-36*4, UPLINK_SYNC_WORD, &average_dphi)) {
         fprintf(stdout, " (abandoned)\n");
@@ -738,6 +778,8 @@ int decode_uplink_frame(uint8_t *input)
     // deinterleave blocks
     for (block = 0; block < 6; ++block) {
         uint8_t blockdata[92];
+        int n_corrected;
+        int corrected_pos[20];
         
         fprintf(stdout, "  Uplink %c:  ", ('A' + block));        
         for (i = 0; i < 72; ++i) {
@@ -751,12 +793,27 @@ int decode_uplink_frame(uint8_t *input)
         }
         fprintf(stdout, "\n");
 
-        // XXX here we should do error correction on blockdata
+        n_corrected = decode_rs_char(rs_uplink, blockdata, corrected_pos, 0);
+        if (n_corrected >= 0) {
+            if (n_corrected > 0) {
+                fprintf(stdout, "-> corrected symbols at [");
+                for (i = 0; i < n_corrected; ++i)
+                    fprintf(stdout, " %d", corrected_pos[i]);
+                fprintf(stdout, " ]\n");
+            }
 
-        memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
+            memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
+        } else {
+            fprintf(stdout, "-> uncorrectable error; giving up\n");
+            failed = 1;
+            break;
+        }        
     }
-    
-    decode_uplink_mdb(deinterleaved);
+
+    if (!failed) {
+        decode_uplink_mdb(deinterleaved);
+    }
+
     return UPLINK_FRAME_LENGTH*4;
 }
 
