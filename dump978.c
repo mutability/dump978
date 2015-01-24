@@ -31,8 +31,8 @@ void *rs_adsb_long;
 void make_atan2_table();
 void read_from_stdin();
 int process_buffer(uint8_t *input, int len, uint64_t offset);
-int decode_adsb_frame(uint8_t *input);
-int decode_uplink_frame(uint8_t *input);
+int decode_adsb_frame(uint64_t timestamp, uint8_t *input);
+int decode_uplink_frame(uint64_t timestamp, uint8_t *input);
 
 #define UPLINK_POLY 0x187
 #define ADSB_POLY 0x187
@@ -97,6 +97,50 @@ void read_from_stdin()
     }
 }
 
+int find_average_dphi(uint8_t *input, uint64_t pattern, int16_t *center, int32_t *separation)
+{
+    int i;
+
+    int32_t dphi_zero_total = 0;
+    int zero_bits = 0;
+    int32_t dphi_one_total = 0;
+    int one_bits = 0;
+
+    for (i = 0; i < 36; ++i) {
+        uint16_t phi0 = iqphase(input[i*4+0], input[i*4+1]);
+        uint16_t phi1 = iqphase(input[i*4+2], input[i*4+3]);
+        int16_t delta_phi = phi1 - phi0;
+
+        if (pattern & (1UL << (35-i))) {
+            ++one_bits;
+            dphi_one_total += delta_phi;
+        } else {
+            ++zero_bits;
+            dphi_zero_total += delta_phi;
+        }
+    }
+
+    dphi_zero_total /= zero_bits;
+    dphi_one_total /= one_bits;
+
+    *separation = dphi_one_total - dphi_zero_total;
+    *center = (dphi_zero_total + dphi_one_total) / 2;
+
+#if 0    
+    fprintf(stdout, "zeroes %.0fkHz ones %.0fkHz separation %.0fkHz center %.0fkHz\n",
+            dphi_zero_total * 2083334.0 / 65536 / 1000,
+            dphi_one_total * 2083334.0 / 65536 / 1000,
+            *separation * 2083334.0 / 65536 / 1000,
+            *center * 2083334.0 / 65536 / 1000);
+#endif
+
+    // sanity check - 20kHz to 1MHz separation
+    if (*separation < (65536 * (20e3 / 2083334.0)) || *separation > (65536 * (1000e3 / 2083334.0)))
+        return 0;
+    else
+        return 1;
+}
+
 int process_buffer(uint8_t *input, int len, uint64_t offset)
 {
     uint16_t last_phi = iqphase(input[0], input[1]);
@@ -120,26 +164,11 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
     // our caller will pass the remaining data back to us as the
     // start of the buffer next time. This means we don't need to maintain
     // state between calls.
-    for (i = 2; i+(SYNC_LENGTH+UPLINK_FRAME_LENGTH+1)*4 < len; i += 4) {
+    for (i = 2; i+(SYNC_LENGTH+UPLINK_FRAME_LENGTH+3)*4 < len; i += 4) {
         uint16_t phi0 = iqphase(input[i+0], input[i+1]);
         uint16_t phi1 = iqphase(input[i+2], input[i+3]);
         int16_t dphi0 = phi0 - last_phi;  // don't need to worry about wrapping at +/-pi, the width of the datatype does it for us
         int16_t dphi1 = phi1 - phi0;
-
-#if 0
-        {
-            // express dphi as the effective carrier deviation in Hz
-            // dphi = 32768 implies 0.5 cycles/sample = 1041667Hz
-
-            double deviation_0 = (2083334.0 * dphi0 / 65536);
-            double deviation_1 = (2083334.0 * dphi1 / 65536);
-            fprintf(stdout,
-                    "%4d  %02x %02x %02x %02x   %+8.0f %1d    %+8.0f %1d\n",
-                    i, input[i+0], input[i+1], input[i+2], input[i+3], 
-                    deviation_0, (dphi0 < 0) ? 0 : 1,
-                    deviation_1, (dphi1 < 0) ? 0 : 1);
-        }
-#endif
 
         last_phi = phi1;
 
@@ -152,87 +181,35 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
 
         // see if we have a valid sync word
         if ((sync0 & SYNC_MASK) == ADSB_SYNC_WORD) {
-            if ((sync1 & SYNC_MASK) == ADSB_SYNC_WORD) {
-                // Both offset 0 and 1 are candidates, TODO: find the one with better correlation and use that
-                fprintf(stdout, "%9.6f adsb   0+1  ", (offset+i) / 2 / 2083334.0);
-            } else {           
-                fprintf(stdout, "%9.6f adsb   0    ", (offset+i) / 2 / 2083334.0);
-            }
-            i += decode_adsb_frame(input+i+2);
-        } else if ((sync1 & SYNC_MASK) == ADSB_SYNC_WORD) {
-            if ((sync0 & SYNC_MASK)>>1 == ADSB_SYNC_WORD>>1) {
-                // Both offset 1 and 2 are candidates, TODO: find the one with better correlation and use that
-                fprintf(stdout, "%9.6f adsb   1+2  ", (offset+i) / 2 / 2083334.0);
-            } else {
-                fprintf(stdout, "%9.6f adsb   1    ", (offset+i) / 2 / 2083334.0);
-            }
-
-            i += decode_adsb_frame(input+i+4);
+            int skip = decode_adsb_frame(offset+i+2, input+i+2);
+            if (skip) {
+                i = i + 2 + skip - 4;
+                continue;
+            }                
         } else if ((sync0 & SYNC_MASK) == UPLINK_SYNC_WORD) {
-            if ((sync1 & SYNC_MASK) == UPLINK_SYNC_WORD) {
-                // Both offset 0 and 1 are candidates, TODO: find the one with better correlation and use that
-                fprintf(stdout, "%9.6f uplink 0+1  ", (offset+i) / 2 / 2083334.0);
-            } else {           
-                fprintf(stdout, "%9.6f uplink 0    ", (offset+i) / 2 / 2083334.0);
+            int skip = decode_uplink_frame(offset+i+2, input+i+2);
+            if (skip) {
+                i = i + 2 + skip - 4;
+                continue;
             }
-            i += decode_uplink_frame(input+i+2);
+        }
+
+        if ((sync1 & SYNC_MASK) == ADSB_SYNC_WORD) {
+            int skip = decode_adsb_frame(offset+i+4, input+i+4);
+            if (skip) {
+                i = i + 4 + skip - 4;
+                continue;
+            }                
         } else if ((sync1 & SYNC_MASK) == UPLINK_SYNC_WORD) {
-            if ((sync0 & SYNC_MASK)>>1 == UPLINK_SYNC_WORD>>1) {
-                // Both offset 1 and 2 are candidates, TODO: find the one with better correlation and use that
-                fprintf(stdout, "%9.6f uplink 1+2  ", (offset+i) / 2 / 2083334.0);
-            } else {
-                fprintf(stdout, "%9.6f uplink 1    ", (offset+i) / 2 / 2083334.0);
-            }
-
-            i += decode_uplink_frame(input+i+4);
+            int skip = decode_uplink_frame(offset+i+4, input+i+4);
+            if (skip) {
+                i = i + 4 + skip - 4;
+                continue;
+            }                
         }
     }
 
-    //fprintf(stdout, "done %d\n", i);
     return i;
-}
-
-int find_average_dphi(uint8_t *input, uint64_t pattern, int16_t *center)
-{
-    int i;
-
-    int32_t dphi_zero_total = 0;
-    int zero_bits = 0;
-    int32_t dphi_one_total = 0;
-    int one_bits = 0;
-
-    int32_t separation;
-
-    for (i = 0; i < 36; ++i) {
-        uint16_t phi0 = iqphase(input[i*4+0], input[i*4+1]);
-        uint16_t phi1 = iqphase(input[i*4+2], input[i*4+3]);
-        int16_t delta_phi = phi1 - phi0;
-
-        if (pattern & (1UL << (35-i))) {
-            ++one_bits;
-            dphi_one_total += delta_phi;
-        } else {
-            ++zero_bits;
-            dphi_zero_total += delta_phi;
-        }
-    }
-
-    dphi_zero_total /= zero_bits;
-    dphi_one_total /= one_bits;
-
-    separation = dphi_one_total - dphi_zero_total;
-    *center = (dphi_zero_total + dphi_one_total) / 2;
-    fprintf(stdout, "zeroes %.0fkHz ones %.0fkHz separation %.0fkHz center %.0fkHz\n",
-            dphi_zero_total * 2083334.0 / 65536 / 1000,
-            dphi_one_total * 2083334.0 / 65536 / 1000,
-            separation * 2083334.0 / 65536 / 1000,
-            *center * 2083334.0 / 65536 / 1000);
-
-    // sanity check - 20kHz to 1MHz separation
-    if (separation < (65536 * (20e3 / 2083334.0)) || separation > (65536 * (1000e3 / 2083334.0)))
-        return 0;
-    else
-        return 1;
 }
 
 const char *address_qualifiers[8] = {
@@ -320,8 +297,8 @@ void decode_state_vector_common(uint8_t *framedata)
         double wgs_lat = 0, wgs_lng = 0;
         decode_latlng(lat, lng, &wgs_lat, &wgs_lng);
         fprintf(stdout,
-                "  Latitude:          %+3.1f (%d)\n"
-                "  Longitude:         %+3.1f (%d)\n",
+                "  Latitude:          %+3.3f (%d)\n"
+                "  Longitude:         %+3.3f (%d)\n",
                 wgs_lat, lat,
                 wgs_lng, lng);
     }
@@ -587,19 +564,24 @@ void decode_aux_state_vector(uint8_t *framedata)
                 alt);
 }   
                                          
-int decode_adsb_frame(uint8_t *input)
+int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
 {
     int i;
     uint8_t framedata[ADSB_FRAME_LENGTH/8];
     int16_t average_dphi;
+    int32_t separation;
     int mdb_type;
     int n_corrected;
     int corrected_pos[14];
 
-    if (!find_average_dphi(input-36*4, ADSB_SYNC_WORD, &average_dphi)) {
-        fprintf(stdout, " (abandoned)\n");
+    fprintf(stdout, "%-9.6f ADS-B message:", timestamp / 2083334.0 / 2);
+
+    if (!find_average_dphi(input-36*4, ADSB_SYNC_WORD, &average_dphi, &separation)) {
+        fprintf(stdout, " abandoned (separation=%.0fkHz)\n", separation * 2083334.0 / 65536 / 1000);
         return 0;
     }
+
+    fprintf(stdout, " separation=%.0fkHz\n", separation * 2083334.0 / 65536 / 1000);
 
     memset(framedata, 0, sizeof(framedata));
 
@@ -615,7 +597,7 @@ int decode_adsb_frame(uint8_t *input)
     mdb_type = (framedata[0] >> 3);
     if (mdb_type == 0) {
         // "Basic UAT ADS-B Message": 144 data bits, 96 FEC bits
-        fprintf(stdout, "  Basic UAT: ");
+        fprintf(stdout, "Basic UAT: ");
         for (i = 0; i < 144/8; i++)
             fprintf(stdout, "%02X", framedata[i]);
 
@@ -626,20 +608,20 @@ int decode_adsb_frame(uint8_t *input)
         fprintf(stdout, "\n");
 
         n_corrected = decode_rs_char(rs_adsb_short, framedata, corrected_pos, 0);
-        if (n_corrected >= 0) {
-            if (n_corrected > 0) {
-                fprintf(stdout, "-> corrected symbols at [");
-                for (i = 0; i < n_corrected; ++i)
-                    fprintf(stdout, " %d", corrected_pos[i]);
-                fprintf(stdout, " ]\n");
-            }
-            
-            decode_header(framedata);
-            decode_state_vector(framedata);
-        } else {
-            fprintf(stdout, "-> uncorrectable error; skipping\n");
+        if (n_corrected < 0) {
+            fprintf(stdout, "-> uncorrectable error; skipping this ADS-B message\n");
+            return 0;
         }
-
+        
+        if (n_corrected > 0) {
+            fprintf(stdout, "-> corrected symbols at [");
+            for (i = 0; i < n_corrected; ++i)
+                fprintf(stdout, " %d", corrected_pos[i]);
+            fprintf(stdout, " ]\n");
+        }
+        
+        decode_header(framedata);
+        decode_state_vector(framedata);
         return (144+96)*4;
     }
     
@@ -655,32 +637,50 @@ int decode_adsb_frame(uint8_t *input)
     fprintf(stdout, "\n");
 
     n_corrected = decode_rs_char(rs_adsb_long, framedata, corrected_pos, 0);
-    if (n_corrected >= 0) {
-        if (n_corrected > 0) {
-            fprintf(stdout, "-> corrected symbols at [");
-            for (i = 0; i < n_corrected; ++i)
-                fprintf(stdout, " %d", corrected_pos[i]);
-            fprintf(stdout, " ]\n");
-        }
-        
-        decode_header(framedata);
-        if (mdb_type <= 10)
-            decode_state_vector(framedata);
-        if (mdb_type == 1 || mdb_type == 2 || mdb_type == 5 || mdb_type == 6)
-            decode_aux_state_vector(framedata);
-        if (mdb_type == 1 || mdb_type == 3)
-            decode_mode_status(framedata);
-    } else {
-        fprintf(stdout, "-> uncorrectable error; skipping\n");
+    if (n_corrected < 0) {
+        fprintf(stdout, "-> uncorrectable error; skipping this ADS-B message\n");
+        return 0;
     }
+    
+    if (n_corrected > 0) {
+        fprintf(stdout, "-> corrected symbols at [");
+        for (i = 0; i < n_corrected; ++i)
+            fprintf(stdout, " %d", corrected_pos[i]);
+        fprintf(stdout, " ]\n");
+    }
+        
+    decode_header(framedata);
+    if (mdb_type <= 10)
+        decode_state_vector(framedata);
+    if (mdb_type == 1 || mdb_type == 2 || mdb_type == 5 || mdb_type == 6)
+        decode_aux_state_vector(framedata);
+    if (mdb_type == 1 || mdb_type == 3)
+        decode_mode_status(framedata);
     
     return (272+112)*4;
 }
 
 void decode_fisb_apdu(uint8_t *pdu, int length)
 {
+    // I don't have a spec for this :(
+    // Mostly cargo-culted from inspection of the lone-star-adsb decoder
+
+    int id = ((pdu[0] & 0x1f) << 6) | ((pdu[1] & 0xfc) >> 2);
     fprintf(stdout,
-            "     === FIS-B APDU ===\n");
+            "     === FIS-B APDU ===\n"
+            "      Product:\n"
+            "       A:%d G:%d P:%d S:%d T:%d ID:%d\n"
+            "       Hour: %d Min: %d\n",
+            (pdu[0] & 0x80) ? 1 : 0,
+            (pdu[0] & 0x40) ? 1 : 0,
+            (pdu[0] & 0x20) ? 1 : 0,
+            (pdu[1] & 0x02) ? 1 : 0,
+            ((pdu[1] & 0x01) << 1) | ((pdu[2] & 0x80) >> 7),
+            id,
+
+            (pdu[2] & 0x7c) >> 2,
+            ((pdu[2] & 0x03) << 4) | ((pdu[3] & 0xf0) >> 4));
+
     // TODO
 }
 
@@ -708,6 +708,13 @@ void decode_uplink_app_data(uint8_t *blockdata)
             fprintf(stdout, "    (length exceeds available data, halting decode)\n");
             break;
         } else {
+            int j;
+
+            fprintf(stdout, "    Data:              ");
+            for (j = 0; j < length; ++j)
+                fprintf(stdout, "%02x", blockdata[i + 2 + j]);
+            fprintf(stdout, "\n");
+
             if (type == 0) {
                 // FIS-B APDU
                 decode_fisb_apdu(blockdata + i + 2, length);
@@ -731,8 +738,8 @@ void decode_uplink_mdb(uint8_t *blockdata)
 
         decode_latlng(lat, lng, &wgs_lat, &wgs_lng);
         fprintf(stdout,
-                "    GS Latitude:       %+3.1f (%d)\n"
-                "    GS Longitude:      %+3.1f (%d)\n",
+                "    GS Latitude:       %+3.3f (%d)\n"
+                "    GS Longitude:      %+3.3f (%d)\n",
                 wgs_lat, lat,
                 wgs_lng, lng);
     }
@@ -751,19 +758,23 @@ void decode_uplink_mdb(uint8_t *blockdata)
         decode_uplink_app_data(blockdata);
 }   
 
-int decode_uplink_frame(uint8_t *input)
+int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
 {
     int i, block;
     uint8_t framedata[UPLINK_FRAME_LENGTH/8];
     int16_t average_dphi;
+    int32_t separation;
     uint8_t deinterleaved[432];
-    int failed = 0;
 
-    if (!find_average_dphi(input-36*4, UPLINK_SYNC_WORD, &average_dphi)) {
-        fprintf(stdout, " (abandoned)\n");
+    fprintf(stdout, "%-9.6f Uplink message:", timestamp / 2083334.0 / 2);
+
+    if (!find_average_dphi(input-36*4, UPLINK_SYNC_WORD, &average_dphi, &separation)) {
+        fprintf(stdout, " abandoned (separation=%.0fkHz)\n", separation * 2083334.0 / 65536 / 1000);
         return 0;
     }
-    
+
+    fprintf(stdout, " separation=%.0fkHz\n", separation * 2083334.0 / 65536 / 1000);
+
     memset(framedata, 0, sizeof(framedata));
 
     for (i = 0; i < UPLINK_FRAME_LENGTH; ++i) {
@@ -804,16 +815,12 @@ int decode_uplink_frame(uint8_t *input)
 
             memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
         } else {
-            fprintf(stdout, "-> uncorrectable error; giving up\n");
-            failed = 1;
-            break;
+            fprintf(stdout, "-> uncorrectable error; skipping this uplink message\n");
+            return 0;
         }        
     }
 
-    if (!failed) {
-        decode_uplink_mdb(deinterleaved);
-    }
-
+    decode_uplink_mdb(deinterleaved);
     return UPLINK_FRAME_LENGTH*4;
 }
 
