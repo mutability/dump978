@@ -22,6 +22,8 @@
 #include <math.h>
 #include <unistd.h>
 
+#include "uat.h"
+#include "uat_decode.h"
 #include "fec/rs.h"
 
 void *rs_uplink;
@@ -212,56 +214,6 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
     return i;
 }
 
-const char *address_qualifiers[8] = {
-    "ICAO, from aircraft",
-    "Reserved (1)",
-    "ICAO, rebroadcast by TIS-B",
-    "Non-ICAO TIS-B track file",
-    "Vehicle",
-    "Fixed Beacon",
-    "Reserved (6)",
-    "Reserved (7)"
-};
-
-const char *nic_types[16] = {
-    "unknown integrity, >20NM",
-    "RNP-10/RNP-5, 8-20NM",
-    "RNP-4, 4-8NM",
-    "RNP-2, 2-4NM",
-    "RNP-1, 1-2NM",
-    "RNP-0.5, 0.6-1NM",
-    "RNP-0.3, 0.2-0.6NM",
-    "RNP-0.1, 0.1-0.2NM",
-    "RNP-0.05, <0.1NM",
-    "Rc 25-75m, VPL 37.5-112m",
-    "Rc 7.5-25m, VPL 11-37.5m",
-    "Rc <7.5m, VPL <11m",
-    "reserved (12)",
-    "reserved (13)",
-    "reserved (14)",
-    "reserved (15)"
-};
-
-const char *airground_state[4] = {
-    "Airborne, subsonic",
-    "Airborne, supersonic",
-    "On ground",
-    "Reserved (3)"
-};
-
-void decode_header(uint8_t *framedata)
-{
-    fprintf(stdout,
-            " === HEADER ===\n"
-            "  MDB type code:     %d\n"
-            "  Address qualifier: %d (%s)\n"
-            "  Address:           %06x\n",
-            framedata[0]>>3,
-            framedata[0] & 7,
-            address_qualifiers[framedata[0] & 7],
-            (framedata[1] << 16) | (framedata[2] << 8) | framedata[3]);
-}
-
 void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
 {
     if (lat <= 0x400000) {
@@ -277,302 +229,15 @@ void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
         *wgs_lng -= 360.0;        
 } 
 
-void decode_state_vector_common(uint8_t *framedata)
-{
-    int lat, lng, alt, nic, ag, hvel, vvel;
-
-    fprintf(stdout,
-            " === STATE VECTOR ===\n");
-
-    lat = (framedata[4] << 15) | (framedata[5] << 7) | (framedata[6] >> 1);
-    lng = ((framedata[6] & 1) << 23) | (framedata[7] << 15) | (framedata[8] << 7) | (framedata[9] >> 1);            
-    alt = (framedata[10] << 4) | ((framedata[11] & 0xf0) >> 4);
-    nic = (framedata[11] & 15);
-            
-    if (lat == 0 && lng == 0 && nic == 0) {
-        fprintf(stdout,
-                "  Latitude:          unavailable\n"
-                "  Longitude:         unavailable\n");
-    } else {
-        double wgs_lat = 0, wgs_lng = 0;
-        decode_latlng(lat, lng, &wgs_lat, &wgs_lng);
-        fprintf(stdout,
-                "  Latitude:          %+3.3f (%d)\n"
-                "  Longitude:         %+3.3f (%d)\n",
-                wgs_lat, lat,
-                wgs_lng, lng);
-    }
-    
-    if (alt == 0)
-        fprintf(stdout,
-                "  Altitude:          unavailable\n");
-    else
-        fprintf(stdout,
-                "  Altitude:          %d ft %s (%d)\n",
-                alt * 25 - 1025,
-                (framedata[9] & 1) ? "geometric" : "barometric",
-                alt);
-    
-    fprintf(stdout,
-            "  NIC:               %s (%d)\n",
-            nic_types[nic], nic);
-    
-    
-    ag = framedata[12] >> 6;
-    fprintf(stdout,
-            "  Air/ground state:  %s (%d)\n",
-            airground_state[ag], ag);
-
-    hvel = ((framedata[12] & 0x1f) << 17) | (framedata[13] << 9) | (framedata[14] << 1) | ((framedata[15] & 0x80) >> 7);
-    vvel = ((framedata[15] & 0x7f) << 4) | ((framedata[16] & 0xf0) >> 4);
-
-    if (ag & 2) {
-        int raw_gs = (hvel >> 11) & 0x7ff;
-        int raw_track = hvel & 0x7ff;
-        double len, wid;
-
-        if (raw_gs == 0) {
-            fprintf(stdout,
-                    "  Ground speed:      unavailable (%d)\n",
-                    raw_gs);
-        } else {
-            int gs = ((raw_gs & 0x3ff) - 1);
-            fprintf(stdout,
-                    "  Ground speed:      %d kts (%d)\n",
-                    gs, raw_gs);
-        } 
-
-        switch ((raw_track & 0x600) >> 9) {
-        case 0:
-            fprintf(stdout,
-                    "  Track/heading:    unavailable (%d)\n",
-                    raw_track);
-            break;
-        case 1:
-            fprintf(stdout,
-                    "  True track angle: %d (%d)\n",
-                    (raw_track & 0x1ff) * 360 / 512,
-                    raw_track);
-            break;
-        case 2:
-            fprintf(stdout,
-                    "  Magnetic heading: %d (%d)\n",
-                    (raw_track & 0x1ff) * 360 / 512,
-                    raw_track);
-            break;
-        case 3:
-            fprintf(stdout,
-                    "  True heading:     %d (%d)\n",
-                    (raw_track & 0x1ff) * 360 / 512,
-                    raw_track);
-            break;
-        }
-        
-        switch ((vvel >> 7) & 15) {
-        case 0: len = 15; wid = 11.5; break;
-        case 1: len = 15; wid = 23; break;
-        case 2: len = 25; wid = 28.5; break;
-        case 3: len = 25; wid = 34; break;
-        case 4: len = 35; wid = 33; break;
-        case 5: len = 35; wid = 38; break;
-        case 6: len = 45; wid = 39.5; break;
-        case 7: len = 45; wid = 45; break;
-        case 8: len = 55; wid = 45; break;
-        case 9: len = 55; wid = 52; break;
-        case 10: len = 65; wid = 59.5; break;
-        case 11: len = 65; wid = 67; break;
-        case 12: len = 75; wid = 72.5; break;
-        case 13: len = 75; wid = 80; break;
-        case 14: len = 85; wid = 80; break;
-        case 15: len = 85; wid = 90; break;
-        }
-
-        fprintf(stdout,
-                "  Length/width:     %.0fm/%.1fm (%d)\n"
-                "  Position offset:  %s\n",
-                len, wid, vvel,
-                (vvel & 0x40) ? "applied" : "not applied");
-    } else {
-        // airborne
-        int raw_ns = (hvel >> 11) & 0x7ff;
-        int raw_ew = hvel & 0x7ff;        
-        int supersonic = (ag & 1);
-        int ns_vel;
-        int ew_vel;
-        int track;
-        int speed;
-
-        if (raw_ns == 0) {
-            ns_vel = 0;
-            fprintf(stdout,
-                    "  N/S velocity:      unavailable\n");
-        } else {
-            ns_vel = ((raw_ns & 0x3ff) - 1) * (supersonic ? 4 : 1) * ((raw_ns & 0x400) ? -1 : 1);
-            fprintf(stdout,
-                    "  N/S velocity:      %d kts (%d)\n", ns_vel, raw_ns);
-        }
-
-        if (raw_ew == 0) {
-            ew_vel = 0;
-            fprintf(stdout,
-                    "  E/W velocity:      unavailable\n");
-        } else {
-            ew_vel = ((raw_ew & 0x3ff) - 1) * (supersonic ? 4 : 1) * ((raw_ew & 0x400) ? -1 : 1);
-            fprintf(stdout,
-                    "  E/W velocity:      %d kts (%d)\n", ew_vel, raw_ew);
-        }
-        
-        if (ns_vel != 0 || ew_vel != 0) {
-            track = (int) (90 - atan2(ns_vel, ew_vel) * 180 / M_PI);
-            if (track < 0)
-                track += 360;
-            speed = (int) sqrt(ns_vel * ns_vel + ew_vel * ew_vel);
-            fprintf(stdout,
-                    "  Track:             %d\n"
-                    "  Speed:             %d kts\n",
-                    track, speed);
-        } else {
-            track = 0;
-            speed = 0;
-            fprintf(stdout,
-                    "  Track:             indeterminate\n"
-                    "  Speed:             0 kts\n");
-        }
-
-        if ((vvel & 0x1ff) == 0) {
-            fprintf(stdout,
-                    "  Vertical rate:     unavailable\n");
-        } else {
-            int vrate = ((vvel & 0x1ff) - 1) * 64 * ((vvel & 0x200) ? -1 : 1);
-            if (vvel & 0x400)
-                fprintf(stdout,
-                        "  Vert rate (baro):  %d ft/min (%d)\n",
-                        vrate, vvel);
-            else
-                fprintf(stdout,
-                        "  Vert rate (geo):   %d ft/min (%d)\n",
-                        vrate, vvel);
-        }
-    }        
-}
-
-void decode_state_vector(uint8_t *framedata)
-{
-    int addr_qual = framedata[0] & 7;
-    
-    if (addr_qual == 0 || addr_qual == 1 || addr_qual == 4 || addr_qual == 5) {
-        // ADS-B
-        decode_state_vector_common(framedata);
-        fprintf(stdout,
-                "  UTC coupled:       %s\n",
-                (framedata[16] & 0x08) ? "yes" : "no");
-    } else if (addr_qual == 2 || addr_qual == 3) {
-        // TIS-B
-        decode_state_vector_common(framedata);
-        fprintf(stdout,
-                "  TIS-B Site ID:     %d\n",
-                (framedata[16] & 0x0f));
-    }
-}
-
-char base40_alphabet[40] = "0123456789ABCDEFGHIJKLMNOPQRTSUVWXYZ ...";
-void decode_emitter_callsign(uint8_t *framedata) {
-    char buf[9];    
-    uint16_t v;
-    int emitter;
-
-    v = (framedata[17]<<8) | (framedata[18]);
-    emitter = (v/1600) % 40;
-    buf[0] = base40_alphabet[(v/40) % 40];
-    buf[1] = base40_alphabet[v % 40];
-    v = (framedata[19]<<8) | (framedata[20]);
-    buf[2] = base40_alphabet[(v/1600) % 40];
-    buf[3] = base40_alphabet[(v/40) % 40];
-    buf[4] = base40_alphabet[v % 40];
-    v = (framedata[21]<<8) | (framedata[22]);
-    buf[5] = base40_alphabet[(v/1600) % 40];
-    buf[6] = base40_alphabet[(v/40) % 40];
-    buf[7] = base40_alphabet[v % 40];
-    buf[8] = 0;
-
-    fprintf(stdout,
-            "  Emitter category:  %d\n"
-            "  Callsign:          %s\n",
-            emitter,
-            buf);
-}
-
-void decode_mode_status(uint8_t *framedata)
-{
-    fprintf(stdout,
-            " === MODE STATUS ===\n");
-    decode_emitter_callsign(framedata);
-
-    fprintf(stdout,
-            "  Emergency status:  %d\n"
-            "  UAT version:       %d\n"
-            "  SIL:               %d\n",
-            framedata[23] >> 5,
-            (framedata[23] >> 2) & 7,
-            framedata[23] & 3);
-
-    fprintf(stdout,
-            "  Transmit MSO:      %d\n",
-            framedata[24] >> 2);
-
-    fprintf(stdout,
-            "  NACp:              %d\n"
-            "  NACv:              %d\n"
-            "  NICbaro:           %d\n",
-            framedata[25] >> 4,
-            (framedata[25] >> 1) & 7,
-            framedata[25] & 1);
-
-    fprintf(stdout,
-            "  Capability codes:  %s %s\n"
-            "  Operational modes: %s %s %s\n"
-            "  True/Mag:          %s\n"
-            "  CSID:              %s\n",
-            (framedata[26] & 0x80) ? "+CDTI" : "-cdti",
-            (framedata[26] & 0x40) ? "+ACAS" : "-acas",
-
-            (framedata[26] & 0x20) ? "+ACASRA" : "-acasra",
-            (framedata[26] & 0x10) ? "+IDENT" : "-ident",
-            (framedata[26] & 0x08) ? "+ATC" : "-atc",
-
-            (framedata[26] & 0x04) ? "Magnetic" : "True",
-            
-            (framedata[26] & 0x02) ? "normal callsign" : "alternate callsign");        
-}
-
-void decode_aux_state_vector(uint8_t *framedata)
-{
-    int alt = (framedata[29] << 4) | ((framedata[30] & 0xf0) >> 4);
-
-    fprintf(stdout,
-            " === AUX STATE VECTOR ===\n");
-
-
-    if (alt == 0)
-        fprintf(stdout,
-                "  Secondary alt:     unavailable\n");
-    else
-        fprintf(stdout,
-                "  Secondary alt:     %d ft %s (%d)\n",
-                alt * 25 - 1025,
-                (framedata[9] & 1) ? "barometric" : "geometric",
-                alt);
-}   
-                                         
 int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
 {
     int i;
     uint8_t framedata[ADSB_FRAME_LENGTH/8];
     int16_t average_dphi;
     int32_t separation;
-    int mdb_type;
     int n_corrected;
     int corrected_pos[14];
+    struct uat_adsb_mdb mdb;
 
     fprintf(stdout, "%-9.6f ADS-B message:", timestamp / 2083334.0 / 2);
 
@@ -594,8 +259,7 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
             framedata[i/8] |= (1 << (7 - (i&7)));
     }
 
-    mdb_type = (framedata[0] >> 3);
-    if (mdb_type == 0) {
+    if ((framedata[0] >> 3) == 0) {
         // "Basic UAT ADS-B Message": 144 data bits, 96 FEC bits
         fprintf(stdout, "Basic UAT: ");
         for (i = 0; i < 144/8; i++)
@@ -623,8 +287,9 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
             fprintf(stdout, " (%d)\n", n_corrected);
         }
         
-        decode_header(framedata);
-        decode_state_vector(framedata);
+        uat_decode_adsb_mdb(framedata, &mdb);
+        uat_display_adsb_mdb(&mdb, stdout);
+
         return (144+96)*4;
     }
     
@@ -654,15 +319,10 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
             fprintf(stdout, "%02X", framedata[i]);            
         fprintf(stdout, " (%d)\n", n_corrected);
     }
-        
-    decode_header(framedata);
-    if (mdb_type <= 10)
-        decode_state_vector(framedata);
-    if (mdb_type == 1 || mdb_type == 2 || mdb_type == 5 || mdb_type == 6)
-        decode_aux_state_vector(framedata);
-    if (mdb_type == 1 || mdb_type == 3)
-        decode_mode_status(framedata);
-    
+
+    uat_decode_adsb_mdb(framedata, &mdb);
+    uat_display_adsb_mdb(&mdb, stdout);
+
     return (272+112)*4;
 }
 
