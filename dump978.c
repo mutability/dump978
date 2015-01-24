@@ -614,10 +614,13 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
         }
         
         if (n_corrected > 0) {
-            fprintf(stdout, "-> corrected symbols at [");
-            for (i = 0; i < n_corrected; ++i)
-                fprintf(stdout, " %d", corrected_pos[i]);
-            fprintf(stdout, " ]\n");
+            fprintf(stdout, "Corrected: ");
+            for (i = 0; i < 144/8; i++)
+                fprintf(stdout, "%02X", framedata[i]);
+            fprintf(stdout, " | ");
+            for (i = 144/8; i < (144+96)/8; i++)
+                fprintf(stdout, "%02X", framedata[i]);
+            fprintf(stdout, " (%d)\n", n_corrected);
         }
         
         decode_header(framedata);
@@ -626,7 +629,7 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
     }
     
     // "Long UAT ADS-B Message": 272 data bits, 112 FEC bits
-    fprintf(stdout, "  Long UAT:  ");
+    fprintf(stdout, "Long UAT:  ");
     for (i = 0; i < 272/8; i ++)
         fprintf(stdout, "%02X", framedata[i]);
     
@@ -643,10 +646,13 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
     }
     
     if (n_corrected > 0) {
-        fprintf(stdout, "-> corrected symbols at [");
-        for (i = 0; i < n_corrected; ++i)
-            fprintf(stdout, " %d", corrected_pos[i]);
-        fprintf(stdout, " ]\n");
+        fprintf(stdout, "Corrected: ");
+        for (i = 0; i < 272/8; i++)
+            fprintf(stdout, "%02X", framedata[i]);            
+        fprintf(stdout, " | ");
+        for (i = 272/8; i < (272+112)/8; i++)
+            fprintf(stdout, "%02X", framedata[i]);            
+        fprintf(stdout, " (%d)\n", n_corrected);
     }
         
     decode_header(framedata);
@@ -807,10 +813,15 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
         n_corrected = decode_rs_char(rs_uplink, blockdata, corrected_pos, 0);
         if (n_corrected >= 0) {
             if (n_corrected > 0) {
-                fprintf(stdout, "-> corrected symbols at [");
-                for (i = 0; i < n_corrected; ++i)
-                    fprintf(stdout, " %d", corrected_pos[i]);
-                fprintf(stdout, " ]\n");
+                fprintf(stdout, "corrected:   ");
+                for (i = 0; i < 72; ++i) {
+                    fprintf(stdout, "%02x", blockdata[i]);
+                } 
+                fprintf(stdout, " | ");
+                for (i = 72; i < 92; ++i) {
+                    fprintf(stdout, "%02x", blockdata[i]);
+                }
+                fprintf(stdout, " (%d)\n", n_corrected);
             }
 
             memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
