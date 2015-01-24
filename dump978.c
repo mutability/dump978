@@ -235,18 +235,12 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
     uint8_t framedata[ADSB_FRAME_LENGTH/8];
     int16_t average_dphi;
     int32_t separation;
-    int n_corrected;
-    int corrected_pos[14];
     struct uat_adsb_mdb mdb;
-
-    fprintf(stdout, "%-9.6f ADS-B message:", timestamp / 2083334.0 / 2);
+    int n_corrected;
 
     if (!find_average_dphi(input-36*4, ADSB_SYNC_WORD, &average_dphi, &separation)) {
-        fprintf(stdout, " abandoned (separation=%.0fkHz)\n", separation * 2083334.0 / 65536 / 1000);
         return 0;
     }
-
-    fprintf(stdout, " separation=%.0fkHz\n", separation * 2083334.0 / 65536 / 1000);
 
     memset(framedata, 0, sizeof(framedata));
 
@@ -261,67 +255,35 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
 
     if ((framedata[0] >> 3) == 0) {
         // "Basic UAT ADS-B Message": 144 data bits, 96 FEC bits
-        fprintf(stdout, "Basic UAT: ");
-        for (i = 0; i < 144/8; i++)
-            fprintf(stdout, "%02X", framedata[i]);
-
-        fprintf(stdout, " | ");
-        for (i = 144/8; i < (144+96)/8; i++)
-            fprintf(stdout, "%02X", framedata[i]);
-
-        fprintf(stdout, "\n");
-
-        n_corrected = decode_rs_char(rs_adsb_short, framedata, corrected_pos, 0);
-        if (n_corrected < 0) {
-            fprintf(stdout, "-> uncorrectable error; skipping this ADS-B message\n");
+        n_corrected = decode_rs_char(rs_adsb_short, framedata, NULL, 0);
+        if (n_corrected < 0)
             return 0;
-        }
-        
-        if (n_corrected > 0) {
-            fprintf(stdout, "Corrected: ");
-            for (i = 0; i < 144/8; i++)
-                fprintf(stdout, "%02X", framedata[i]);
-            fprintf(stdout, " | ");
-            for (i = 144/8; i < (144+96)/8; i++)
-                fprintf(stdout, "%02X", framedata[i]);
-            fprintf(stdout, " (%d)\n", n_corrected);
-        }
-        
+
         uat_decode_adsb_mdb(framedata, &mdb);
+
+        fprintf(stdout,
+                "%.6f   Basic UAT MDB received\n"
+                "---------------------------------------------\n",
+                timestamp / 2083334.0 / 2);
         uat_display_adsb_mdb(&mdb, stdout);
+        fprintf(stdout, "---------------------------------------------\n\n");
 
         return (144+96)*4;
     }
     
     // "Long UAT ADS-B Message": 272 data bits, 112 FEC bits
-    fprintf(stdout, "Long UAT:  ");
-    for (i = 0; i < 272/8; i ++)
-        fprintf(stdout, "%02X", framedata[i]);
-    
-    fprintf(stdout, " | ");
-    for (i = 272/8; i < (272+112)/8; i++)
-        fprintf(stdout, "%02X", framedata[i]);
-    
-    fprintf(stdout, "\n");
-
-    n_corrected = decode_rs_char(rs_adsb_long, framedata, corrected_pos, 0);
-    if (n_corrected < 0) {
-        fprintf(stdout, "-> uncorrectable error; skipping this ADS-B message\n");
+    n_corrected = decode_rs_char(rs_adsb_long, framedata, NULL, 0);
+    if (n_corrected < 0)
         return 0;
-    }
-    
-    if (n_corrected > 0) {
-        fprintf(stdout, "Corrected: ");
-        for (i = 0; i < 272/8; i++)
-            fprintf(stdout, "%02X", framedata[i]);            
-        fprintf(stdout, " | ");
-        for (i = 272/8; i < (272+112)/8; i++)
-            fprintf(stdout, "%02X", framedata[i]);            
-        fprintf(stdout, " (%d)\n", n_corrected);
-    }
 
     uat_decode_adsb_mdb(framedata, &mdb);
+
+    fprintf(stdout,
+            "%.6f   Long UAT MDB received\n"
+            "---------------------------------------------\n",
+            timestamp / 2083334.0 / 2);
     uat_display_adsb_mdb(&mdb, stdout);
+    fprintf(stdout, "---------------------------------------------\n\n");
 
     return (272+112)*4;
 }
@@ -432,14 +394,9 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
     int32_t separation;
     uint8_t deinterleaved[432];
 
-    fprintf(stdout, "%-9.6f Uplink message:", timestamp / 2083334.0 / 2);
-
     if (!find_average_dphi(input-36*4, UPLINK_SYNC_WORD, &average_dphi, &separation)) {
-        fprintf(stdout, " abandoned (separation=%.0fkHz)\n", separation * 2083334.0 / 65536 / 1000);
         return 0;
     }
-
-    fprintf(stdout, " separation=%.0fkHz\n", separation * 2083334.0 / 65536 / 1000);
 
     memset(framedata, 0, sizeof(framedata));
 
@@ -456,42 +413,24 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
     for (block = 0; block < 6; ++block) {
         uint8_t blockdata[92];
         int n_corrected;
-        int corrected_pos[20];
         
-        fprintf(stdout, "  Uplink %c:  ", ('A' + block));        
-        for (i = 0; i < 72; ++i) {
-            fprintf(stdout, "%02x", framedata[i * 6 + block]);
+        for (i = 0; i < 92; ++i)
             blockdata[i] = framedata[i * 6 + block];
-        } 
-        fprintf(stdout, " | ");
-        for (i = 72; i < 92; ++i) {
-            fprintf(stdout, "%02x", framedata[i * 6 + block]);
-            blockdata[i] = framedata[i * 6 + block];
-        }
-        fprintf(stdout, "\n");
 
-        n_corrected = decode_rs_char(rs_uplink, blockdata, corrected_pos, 0);
-        if (n_corrected >= 0) {
-            if (n_corrected > 0) {
-                fprintf(stdout, "corrected:   ");
-                for (i = 0; i < 72; ++i) {
-                    fprintf(stdout, "%02x", blockdata[i]);
-                } 
-                fprintf(stdout, " | ");
-                for (i = 72; i < 92; ++i) {
-                    fprintf(stdout, "%02x", blockdata[i]);
-                }
-                fprintf(stdout, " (%d)\n", n_corrected);
-            }
-
-            memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
-        } else {
-            fprintf(stdout, "-> uncorrectable error; skipping this uplink message\n");
+        n_corrected = decode_rs_char(rs_uplink, blockdata, NULL, 0);
+        if (n_corrected < 0)
             return 0;
-        }        
+
+        memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
     }
 
-    decode_uplink_mdb(deinterleaved);
+    fprintf(stdout,
+            "%.6f   Uplink MDB received\n"
+            "---------------------------------------------\n",
+            timestamp / 2083334.0 / 2);
+    //decode_uplink_mdb(deinterleaved);
+    fprintf(stdout, "---------------------------------------------\n\n");
+
     return UPLINK_FRAME_LENGTH*4;
 }
 
