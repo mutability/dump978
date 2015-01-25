@@ -158,6 +158,10 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
             sv->position_offset = (frame[15] & 0x04) ? 1 : 0;
         }
         break;
+
+    case AIRGROUND_RESERVED:
+        // nothing
+        break;
     }
     
     if ((frame[0] & 7) == 2 || (frame[0] & 7) == 3) {
