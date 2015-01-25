@@ -68,8 +68,7 @@ static void dump_raw_message(char updown, uint8_t *data, int len)
 }
 
 
-uint16_t atan2_table[65536]; // contains value [0..65536) -> [0, 2*pi)
-#define iqphase(i,q) (atan2_table[i*256 + q])
+uint16_t iqphase[256][256]; // contains value [0..65536) -> [0, 2*pi)
 
 void make_atan2_table()
 {
@@ -82,7 +81,7 @@ void make_atan2_table()
             double ang = atan2(d_q, d_i) + M_PI; // atan2 returns [-pi..pi], normalize to [0..2*pi]
             double scaled_ang = round(32768 * ang / M_PI);
             
-            iqphase(i,q) = (scaled_ang < 0 ? 0 : scaled_ang > 65535 ? 65535 : (uint16_t)scaled_ang);
+            iqphase[i][q] = (scaled_ang < 0 ? 0 : scaled_ang > 65535 ? 65535 : (uint16_t)scaled_ang);
         }
     }
 }
@@ -145,8 +144,8 @@ int find_average_dphi(uint8_t *input, uint64_t pattern, int16_t *center, int32_t
     int one_bits = 0;
 
     for (i = 0; i < 36; ++i) {
-        uint16_t phi0 = iqphase(input[i*4+0], input[i*4+1]);
-        uint16_t phi1 = iqphase(input[i*4+2], input[i*4+3]);
+        uint16_t phi0 = iqphase[input[i*4+0]][input[i*4+1]];
+        uint16_t phi1 = iqphase[input[i*4+2]][input[i*4+3]];
         int16_t delta_phi = phi1 - phi0;
 
         if (pattern & (1UL << (35-i))) {
@@ -181,7 +180,7 @@ int find_average_dphi(uint8_t *input, uint64_t pattern, int16_t *center, int32_t
 
 int process_buffer(uint8_t *input, int len, uint64_t offset)
 {
-    uint16_t last_phi = iqphase(input[0], input[1]);
+    uint16_t last_phi = iqphase[input[0]][input[1]];
     uint64_t sync0 = 0, sync1 = 0;
     int i;    
 
@@ -203,8 +202,8 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
     // start of the buffer next time. This means we don't need to maintain
     // state between calls.
     for (i = 2; i+(SYNC_BITS+UPLINK_FRAME_BITS+3)*4 < len; i += 4) {
-        uint16_t phi0 = iqphase(input[i+0], input[i+1]);
-        uint16_t phi1 = iqphase(input[i+2], input[i+3]);
+        uint16_t phi0 = iqphase[input[i+0]][input[i+1]];
+        uint16_t phi1 = iqphase[input[i+2]][input[i+3]];
         int16_t dphi0 = phi0 - last_phi;  // don't need to worry about wrapping at +/-pi, the width of the datatype does it for us
         int16_t dphi1 = phi1 - phi0;
 
@@ -282,8 +281,8 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
     memset(framedata, 0, sizeof(framedata));
 
     for (i = 0; i < LONG_FRAME_BITS; ++i) {
-        uint16_t phi0 = iqphase(input[i*4+0], input[i*4+1]);
-        uint16_t phi1 = iqphase(input[i*4+2], input[i*4+3]);
+        uint16_t phi0 = iqphase[input[i*4+0]][input[i*4+1]];
+        uint16_t phi1 = iqphase[input[i*4+2]][input[i*4+3]];
         int16_t dphi = phi1 - phi0;
         
         if (dphi > average_dphi)
@@ -445,8 +444,8 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
     memset(interleaved, 0, sizeof(interleaved));
 
     for (i = 0; i < UPLINK_FRAME_BITS; ++i) {
-        uint16_t phi0 = iqphase(input[i*4+0], input[i*4+1]);
-        uint16_t phi1 = iqphase(input[i*4+2], input[i*4+3]);
+        uint16_t phi0 = iqphase[input[i*4+0]][input[i*4+1]];
+        uint16_t phi1 = iqphase[input[i*4+2]][input[i*4+3]];
         int16_t dphi = phi1 - phi0;
         
         if (dphi > average_dphi)
