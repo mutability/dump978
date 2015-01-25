@@ -7,3 +7,8 @@ This expects 8-bit I/Q samples on stdin at 2.083334MHz, for example:
 ````
 $ rtl_sdr -f 978000000 -s 2083334 -g 48 - | ./dump978
 ````
+
+Run with no args to get verbose decoding.
+Run with -raw to get raw message data only.
+
+See sample-output.txt for some example output.

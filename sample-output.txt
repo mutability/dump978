@@ -1,0 +1,3559 @@
++3514c952d65ca0b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+3.070726   Uplink MDB received
+=============================================
+=============================================
+
++3514c952d65ca9b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+3.120225   Uplink MDB received
+=============================================
+=============================================
+
++3514c952d65caab000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+4.125704   Uplink MDB received
+=============================================
+=============================================
+
++3514c952d65cb2b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+4.169703   Uplink MDB received
+=============================================
+=============================================
+
++3514c952d65ca6b0350000350e20f02210000000ff005f2c9c7c4d5060cb4c76cf0833d75e73c367f6c31c1f5df35f0950cb20f48e80d3c17f1d70c72d31db3c1fc75c31cb4cb1c307f0c327f1e307c17d97df0950cb20f48e80d3c17cd3c18154e0c31c75c9f0950cb20f48e80d3c1b200c17803900002d0e1d688210000000ff19cf2e1e00000000efd30d01180e2d01181500ac40c3519daea8bb42f941aeaa8282ae31aeaca3e2e265aeae8142e9a5aeae7da3171daeac40c3519daeac40c3519cb4a8bb42f940b4aa8282ae30b4aca3e2e264b4ae8142e9a4b4ae7da3171cb4ac40c3519cb45780002d0e1d682210000000ff00a43cc87c04948d15480b4c63e0cb4c74d3581318f5205c1832d31d34d5e04948d15481404e1cf815404520ca018f4a051548280138480c3174e058130912054e509320cb4cb1c3078c3174e040f50539424132ebae0c18013848034d43205d44937823d5384144802660cb04c5805206b73c135e02050eddb04e051236dcb04e035a0ad49a4edcb04c580520678c3174e015842e8033ce1138053841e0c78b72c5a7800000000000000000000000000000000000000000000000;
+9.103601   Uplink MDB received
+=============================================
+=============================================
+
+-08ad7233356e0752cb780d29119817801f07ae2094e6c40ba2a4c280000da0000000;
+26.355284   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5678
+ Longitude:         -121.7849
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -101 kt
+ E/W velocity:      46 kt
+ Track:             155
+ Speed:             110 kt
+ Vertical rate:     0 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          9658K
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      40
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     4425 ft (geometric)
+=============================================
+
+-00ad7233356dc752cb960d2911a814203f00;
+27.721506   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5671
+ Longitude:         -121.7846
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -105 kt
+ E/W velocity:      39 kt
+ Track:             159
+ Speed:             112 kt
+ Vertical rate:     -128 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00ad7233356d4d52cbc40d1911c40da03800;
+30.368450   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5658
+ Longitude:         -121.7841
+ Altitude:          4200 ft (barometric)
+ N/S velocity:      -112 kt
+ E/W velocity:      26 kt
+ Track:             166
+ Speed:             114 kt
+ Vertical rate:     -128 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08ad7233356d2752cbcc0d1911c80ba03d066a0025ed2d0b76a4c080000d90000000;
+31.144433   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5654
+ Longitude:         -121.7840
+ Altitude:          4200 ft (barometric)
+ N/S velocity:      -113 kt
+ E/W velocity:      22 kt
+ Track:             168
+ Speed:             115 kt
+ Vertical rate:     -128 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          1200 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      29
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     4400 ft (geometric)
+=============================================
+
+-10ad7233356c8f52cbe00d1911dc02a0280000000000000000000000000d90000000;
+34.153620   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5638
+ Longitude:         -121.7838
+ Altitude:          4200 ft (barometric)
+ N/S velocity:      -118 kt
+ E/W velocity:      4 kt
+ Track:             178
+ Speed:             118 kt
+ Vertical rate:     -64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4400 ft (geometric)
+=============================================
+
+-00ad7233356bc552cbc60d2911d60c006800;
+37.174552   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5616
+ Longitude:         -121.7841
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -116 kt
+ E/W velocity:      -23 kt
+ Track:             191
+ Speed:             118 kt
+ Vertical rate:     320 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10ad7233356b5752cba00d2911ca13005f0000000000000000000000000da0000000;
+39.320757   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5604
+ Longitude:         -121.7845
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -113 kt
+ E/W velocity:      -37 kt
+ Track:             198
+ Speed:             118 kt
+ Vertical rate:     256 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4425 ft (geometric)
+=============================================
+
+-00ad7233356a8f52cb200d29119221802f00;
+43.759163   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5583
+ Longitude:         -121.7859
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -99 kt
+ E/W velocity:      -66 kt
+ Track:             213
+ Speed:             118 kt
+ Vertical rate:     64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10ad7233356a7f52cb120d29118e2280280000000000000000000000000db0000000;
+44.116156   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5581
+ Longitude:         -121.7860
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -98 kt
+ E/W velocity:      -68 kt
+ Track:             214
+ Speed:             119 kt
+ Vertical rate:     64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4450 ft (geometric)
+=============================================
+
+-00ad72333569e952ca5e0d3911362e801800;
+48.267819   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5565
+ Longitude:         -121.7879
+ Altitude:          4250 ft (barometric)
+ N/S velocity:      -76 kt
+ E/W velocity:      -92 kt
+ Track:             230
+ Speed:             119 kt
+ Vertical rate:     0 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00ad723335699552c9bc0d2910e635204f00;
+49.189500   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5556
+ Longitude:         -121.7897
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -56 kt
+ E/W velocity:      -105 kt
+ Track:             241
+ Speed:             119 kt
+ Vertical rate:     -192 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
++3514c952d65cb3b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+49.990454   Uplink MDB received
+=============================================
+=============================================
+
+-10ad723335695352c8ca0d29106e3a205d0000000000000000000000000da0000000;
+53.200166   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5549
+ Longitude:         -121.7923
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -26 kt
+ E/W velocity:      -115 kt
+ Track:             257
+ Speed:             117 kt
+ Vertical rate:     -256 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4425 ft (geometric)
+=============================================
+
+-00ad723335694752c8660d29103a3aa03800;
+54.682885   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5548
+ Longitude:         -121.7933
+ Altitude:          4225 ft (barometric)
+ N/S velocity:      -13 kt
+ E/W velocity:      -116 kt
+ Track:             263
+ Speed:             116 kt
+ Vertical rate:     -128 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00ad72333587d752926a0b3900ce2ea08800;
+55.689693   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6387
+ Longitude:         -121.9416
+ Altitude:          3450 ft (barometric)
+ N/S velocity:      50 kt
+ E/W velocity:      -92 kt
+ Track:             298
+ Speed:             104 kt
+ Vertical rate:     -448 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a78bea356ca15287b80479016a10e02800;
+55.885160   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5640
+ Longitude:         -121.9710
+ Altitude:          750 ft (barometric)
+ N/S velocity:      89 kt
+ E/W velocity:      -32 kt
+ Track:             340
+ Speed:             94 kt
+ Vertical rate:     -64 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
++3514c952d65cb5b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+56.601640   Uplink MDB received
+=============================================
+=============================================
+
+-0bac0ccb351f1952bcb003a6007c3140e105c4e6c4e6c40ac2800300000000000000;
+56.690138   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0CCB (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3510
+ Longitude:         -121.8255
+ Altitude:          425 ft (barometric)
+ N/S velocity:      30 kt
+ E/W velocity:      97 kt
+ Track:             72
+ Speed:             101 kt
+ Vertical rate:     832 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      48
+ NACp:              8
+ NACv:              0
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-10ad72333587f152922e0b3900ce2ea08d0000000000000000000000000ba0000000;
+56.880169   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6390
+ Longitude:         -121.9423
+ Altitude:          3450 ft (barometric)
+ N/S velocity:      50 kt
+ E/W velocity:      -92 kt
+ Track:             298
+ Speed:             104 kt
+ Vertical rate:     -448 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3625 ft (geometric)
+=============================================
+
+-0bac0465350a0f528e9c09c6010e39e07105c4e6c4e6c40aaa820300000000000000;
+56.880634   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0465 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.2932
+ Longitude:         -121.9521
+ Altitude:          2875 ft (barometric)
+ N/S velocity:      66 kt
+ E/W velocity:      -114 kt
+ Track:             300
+ Speed:             131 kt
+ Vertical rate:     -384 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      42
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
++3514c952d65ca7b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+57.524621   Uplink MDB received
+=============================================
+=============================================
+
++3514c952d65cb6b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+57.607119   Uplink MDB received
+=============================================
+=============================================
+
+-10ad723335880b5291f20b3900ca2ea0890000000000000000000000000ba0000000;
+58.133643   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6393
+ Longitude:         -121.9429
+ Altitude:          3450 ft (barometric)
+ N/S velocity:      49 kt
+ E/W velocity:      -92 kt
+ Track:             298
+ Speed:             104 kt
+ Vertical rate:     -448 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3625 ft (geometric)
+=============================================
+
+-10a78bea356cf352878c0479015a14c02800000000000000000000000004e0000000;
+58.141363   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5649
+ Longitude:         -121.9715
+ Altitude:          750 ft (barometric)
+ N/S velocity:      85 kt
+ E/W velocity:      -40 kt
+ Track:             334
+ Speed:             93 kt
+ Vertical rate:     64 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     925 ft (geometric)
+=============================================
+
+-00a78bea356d075287800479015615c02f00;
+58.783601   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5651
+ Longitude:         -121.9716
+ Altitude:          750 ft (barometric)
+ N/S velocity:      84 kt
+ E/W velocity:      -42 kt
+ Track:             333
+ Speed:             93 kt
+ Vertical rate:     64 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00ad72333588255291b80b2900ca2e209800;
+59.309118   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6395
+ Longitude:         -121.9435
+ Altitude:          3425 ft (barometric)
+ N/S velocity:      49 kt
+ E/W velocity:      -91 kt
+ Track:             298
+ Speed:             103 kt
+ Vertical rate:     -512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08ad723335882d5291a40b2900ca2e208906430d6ded2d0baea4c080000ba0000000;
+59.768859   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6396
+ Longitude:         -121.9437
+ Altitude:          3425 ft (barometric)
+ N/S velocity:      49 kt
+ E/W velocity:      -91 kt
+ Track:             298
+ Speed:             103 kt
+ Vertical rate:     -448 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0325 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      43
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3625 ft (geometric)
+=============================================
+
+-0bac06c8351e5b52641e062601661cc01105c4e6c4e6c40a42720300000000000000;
+60.450060   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC06C8 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3490
+ Longitude:         -122.0688
+ Altitude:          1425 ft (barometric)
+ N/S velocity:      88 kt
+ E/W velocity:      -56 kt
+ Track:             327
+ Speed:             104 kt
+ Vertical rate:     0 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      16
+ NACp:              7
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-00ad723335884b52915e0b2900ca2e209f00;
+61.134581   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6400
+ Longitude:         -121.9445
+ Altitude:          3425 ft (barometric)
+ N/S velocity:      49 kt
+ E/W velocity:      -91 kt
+ Track:             298
+ Speed:             103 kt
+ Vertical rate:     -512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-0bac01ac35254752da420d0610b80a401105c4e6c4e6c40ac2820300000000000000;
+61.186045   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC01AC (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3680
+ Longitude:         -121.7443
+ Altitude:          4175 ft (barometric)
+ N/S velocity:      -45 kt
+ E/W velocity:      19 kt
+ Track:             157
+ Speed:             48 kt
+ Vertical rate:     0 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      48
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-0bac0d913518ff52c81006e611041940a105c4e6c4e6c40a32820300000000000000;
+61.193045   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0D91 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3343
+ Longitude:         -121.7943
+ Altitude:          1725 ft (barometric)
+ N/S velocity:      -64 kt
+ E/W velocity:      49 kt
+ Track:             142
+ Speed:             80 kt
+ Vertical rate:     576 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      12
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-0bac0ccb351f3b52bd9003d6000436c0e105c4e6c4e6c40a62800300000000000000;
+61.196045   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0CCB (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3514
+ Longitude:         -121.8231
+ Altitude:          500 ft (barometric)
+ N/S velocity:      0 kt
+ E/W velocity:      108 kt
+ Track:             90
+ Speed:             108 kt
+ Vertical rate:     832 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      24
+ NACp:              8
+ NACv:              0
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-0bac0465350aa5528d9009a6011a39607105c4e6c4e6c40afa820300000000000000;
+61.365541   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0465 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.2949
+ Longitude:         -121.9549
+ Altitude:          2825 ft (barometric)
+ N/S velocity:      69 kt
+ E/W velocity:      -113 kt
+ Track:             301
+ Speed:             132 kt
+ Vertical rate:     -384 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      62
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
++3514c952d65ca3b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+61.502539   Uplink MDB received
+=============================================
+=============================================
+
+-0bac06c8351e9f5263fa0616016a1be08105c4e6c4e6c40af2820300000000000000;
+61.677035   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC06C8 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3497
+ Longitude:         -122.0692
+ Altitude:          1400 ft (barometric)
+ N/S velocity:      89 kt
+ E/W velocity:      -54 kt
+ Track:             328
+ Speed:             104 kt
+ Vertical rate:     -448 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      60
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-00ad723335885b5291360b1900ca2e209f00;
+61.999313   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6401
+ Longitude:         -121.9449
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      49 kt
+ E/W velocity:      -91 kt
+ Track:             298
+ Speed:             103 kt
+ Vertical rate:     -512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10ad72333588715291040b1900ca2e20a80000000000000000000000000b80000000;
+62.951293   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6404
+ Longitude:         -121.9455
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      49 kt
+ E/W velocity:      -91 kt
+ Track:             298
+ Speed:             103 kt
+ Vertical rate:     -576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3575 ft (geometric)
+=============================================
+
+-00ad723335888d5290c00b1900c62e20b800;
+64.420513   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6407
+ Longitude:         -121.9462
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      48 kt
+ E/W velocity:      -91 kt
+ Track:             297
+ Speed:             102 kt
+ Vertical rate:     -640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a78bea356dfb5286a8047901361fe04806432c35ed2d0baaa5c0a00004c0000000;
+65.992452   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5677
+ Longitude:         -121.9739
+ Altitude:          750 ft (barometric)
+ N/S velocity:      76 kt
+ E/W velocity:      -62 kt
+ Track:             320
+ Speed:             98 kt
+ Vertical rate:     -192 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0372 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      42
+ NACp:              10
+ NACv:              2
+ NICbaro:           1
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     875 ft (geometric)
+=============================================
+
+-00ad72333588c75290360af900c62e20b900;
+66.937043   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6413
+ Longitude:         -121.9477
+ Altitude:          3350 ft (barometric)
+ N/S velocity:      48 kt
+ E/W velocity:      -91 kt
+ Track:             297
+ Speed:             102 kt
+ Vertical rate:     -640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00ad7233358903528fac0ae900ca2da0bf00;
+69.818483   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6419
+ Longitude:         -121.9491
+ Altitude:          3325 ft (barometric)
+ N/S velocity:      49 kt
+ E/W velocity:      -90 kt
+ Track:             298
+ Speed:             102 kt
+ Vertical rate:     -640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
++3514c952d65cacb000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+70.328688   Uplink MDB received
+=============================================
+=============================================
+
+-0bac0465350c11528a8e0976011238607105c4e6c4e6c40afa820300000000000000;
+71.606778   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0465 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.2988
+ Longitude:         -121.9632
+ Altitude:          2750 ft (barometric)
+ N/S velocity:      67 kt
+ E/W velocity:      -111 kt
+ Track:             301
+ Speed:             129 kt
+ Vertical rate:     -384 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      62
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-0bac0d9135175152c9a60746110c19c0b105c4e6c4e6c40a1a820300000000000000;
+72.560758   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0D91 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3297
+ Longitude:         -121.7899
+ Altitude:          1875 ft (barometric)
+ N/S velocity:      -66 kt
+ E/W velocity:      50 kt
+ Track:             142
+ Speed:             82 kt
+ Vertical rate:     640 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      6
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-0bac09ef3518c552c55605b611081ac0d105c4e6c4e6c40a3a720300000000000000;
+72.562758   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC09EF (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3336
+ Longitude:         -121.8018
+ Altitude:          1250 ft (barometric)
+ N/S velocity:      -65 kt
+ E/W velocity:      52 kt
+ Track:             141
+ Speed:             83 kt
+ Vertical rate:     768 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      14
+ NACp:              7
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-0bac0465350c2b528a4e0966011238e08105c4e6c4e6c40a62820300000000000000;
+72.741254   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0465 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.2990
+ Longitude:         -121.9639
+ Altitude:          2725 ft (barometric)
+ N/S velocity:      67 kt
+ E/W velocity:      -112 kt
+ Track:             300
+ Speed:             130 kt
+ Vertical rate:     -448 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      24
+ NACp:              8
+ NACv:              1
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
+-0bac0d65352c65523bd60546106022c01105c4e6c4e6c40a92700300000000000000;
+72.744254   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AC0D65 (TIS-B track file address)
+SV:
+ NIC:               6
+ Latitude:          +37.3875
+ Longitude:         -122.1794
+ Altitude:          1075 ft (barometric)
+ N/S velocity:      -23 kt
+ E/W velocity:      68 kt
+ Track:             108
+ Speed:             71 kt
+ Vertical rate:     0 ft/min (barometric)
+ UTC coupling:      no
+ TIS-B site ID:     1
+MS:
+ Emitter category:  No information
+ Callsign:          unavailable
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               2
+ Transmit MSO:      36
+ NACp:              7
+ NACv:              0
+ NICbaro:           0
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     unavailable
+=============================================
+
++3514c952d65cb9b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+73.152746   Uplink MDB received
+=============================================
+=============================================
+
+-08a78bea356f3152853e0469010e23402806432c35ed2d0b16a5c0a00004c0000000;
+73.432497   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5710
+ Longitude:         -121.9778
+ Altitude:          725 ft (barometric)
+ N/S velocity:      66 kt
+ E/W velocity:      -69 kt
+ Track:             313
+ Speed:             95 kt
+ Vertical rate:     64 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0372 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      5
+ NACp:              10
+ NACv:              2
+ NICbaro:           1
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     875 ft (geometric)
+=============================================
+
+-08ad72333589f3528d860ac900c62f206f07ae2094e6c40b1ea4c280000b30000000;
+78.704915   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6445
+ Longitude:         -121.9550
+ Altitude:          3275 ft (barometric)
+ N/S velocity:      48 kt
+ E/W velocity:      -93 kt
+ Track:             297
+ Speed:             104 kt
+ Vertical rate:     -320 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          9658K
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      7
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3450 ft (geometric)
+=============================================
+
+-00a78bea356ffd52841e046900fe26603f00;
+80.936841   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5732
+ Longitude:         -121.9809
+ Altitude:          725 ft (barometric)
+ N/S velocity:      62 kt
+ E/W velocity:      -75 kt
+ Track:             309
+ Speed:             97 kt
+ Vertical rate:     -128 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a78bea35700d528406045900fe26e03800000000000000000000000004b0000000;
+81.447831   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5734
+ Longitude:         -121.9811
+ Altitude:          700 ft (barometric)
+ N/S velocity:      62 kt
+ E/W velocity:      -76 kt
+ Track:             309
+ Speed:             98 kt
+ Vertical rate:     -128 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     850 ft (geometric)
+=============================================
+
+-10a78bea3570235283e4045900fe27604900000000000000000000000004a0000000;
+82.377561   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5736
+ Longitude:         -121.9815
+ Altitude:          700 ft (barometric)
+ N/S velocity:      62 kt
+ E/W velocity:      -77 kt
+ Track:             308
+ Speed:             98 kt
+ Vertical rate:     -192 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     825 ft (geometric)
+=============================================
+
+-00a78bea3570435283b2045900fe27604800;
+83.493788   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5740
+ Longitude:         -121.9820
+ Altitude:          700 ft (barometric)
+ N/S velocity:      62 kt
+ E/W velocity:      -77 kt
+ Track:             308
+ Speed:             98 kt
+ Vertical rate:     -192 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08ad7233358a61528c620ab900ba31206807ae2094e6c40bd6a4c280000b20000000;
+84.316298   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6457
+ Longitude:         -121.9582
+ Altitude:          3250 ft (barometric)
+ N/S velocity:      45 kt
+ E/W velocity:      -97 kt
+ Track:             294
+ Speed:             106 kt
+ Vertical rate:     -320 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          9658K
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      53
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3425 ft (geometric)
+=============================================
+
+-08a78bea35705f5283880459010227605809e00d40a2040be2a5c2a00004a0000000;
+84.413019   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5743
+ Longitude:         -121.9825
+ Altitude:          700 ft (barometric)
+ N/S velocity:      63 kt
+ E/W velocity:      -77 kt
+ Track:             309
+ Speed:             99 kt
+ Vertical rate:     -256 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N824WP
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      56
+ NACp:              10
+ NACv:              2
+ NICbaro:           1
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     825 ft (geometric)
+=============================================
+
+-10a78bea3570b152830c0449010626e04800000000000000000000000004a0000000;
+87.571953   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5751
+ Longitude:         -121.9838
+ Altitude:          675 ft (barometric)
+ N/S velocity:      64 kt
+ E/W velocity:      -76 kt
+ Track:             310
+ Speed:             99 kt
+ Vertical rate:     -192 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     825 ft (geometric)
+=============================================
+
+-00a78bea3570d35282da0449010626e03f00;
+88.669430   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5755
+ Longitude:         -121.9844
+ Altitude:          675 ft (barometric)
+ N/S velocity:      64 kt
+ E/W velocity:      -76 kt
+ Track:             310
+ Speed:             99 kt
+ Vertical rate:     -128 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00ad7233358abd528b700aa900ba32207900;
+88.947702   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6467
+ Longitude:         -121.9608
+ Altitude:          3225 ft (barometric)
+ N/S velocity:      45 kt
+ E/W velocity:      -99 kt
+ Track:             294
+ Speed:             108 kt
+ Vertical rate:     -384 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a78bea3570ed5282b20449010226603806432c35ed2d0b82a5c0a00004a0000000;
+89.806907   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5758
+ Longitude:         -121.9848
+ Altitude:          675 ft (barometric)
+ N/S velocity:      63 kt
+ E/W velocity:      -75 kt
+ Track:             310
+ Speed:             97 kt
+ Vertical rate:     -128 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0372 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      32
+ NACp:              10
+ NACv:              2
+ NICbaro:           1
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     825 ft (geometric)
+=============================================
+
+-00ad7233358b13528a720a9900ae33a04800;
+93.498857   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6476
+ Longitude:         -121.9635
+ Altitude:          3200 ft (barometric)
+ N/S velocity:      42 kt
+ E/W velocity:      -102 kt
+ Track:             292
+ Speed:             110 kt
+ Vertical rate:     -192 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08ad7233358b2d528a240a9900ae34203e07ae2094e6c40b3ea4c280000af0000000;
+94.116179   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6479
+ Longitude:         -121.9643
+ Altitude:          3200 ft (barometric)
+ N/S velocity:      42 kt
+ E/W velocity:      -103 kt
+ Track:             292
+ Speed:             111 kt
+ Vertical rate:     -128 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          9658K
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      15
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3350 ft (geometric)
+=============================================
+
+-08a78bea3571935281ba045900fe25403806432c35ed2d0bb6a5c0a00004c0000000;
+95.171630   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5776
+ Longitude:         -121.9874
+ Altitude:          700 ft (barometric)
+ N/S velocity:      62 kt
+ E/W velocity:      -73 kt
+ Track:             310
+ Speed:             95 kt
+ Vertical rate:     128 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0372 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      45
+ NACp:              10
+ NACv:              2
+ NICbaro:           1
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     875 ft (geometric)
+=============================================
+
+-08ad7233358b3f5289ec0a9900ae34203906430d6ded2d0b0ea4c080000af0000000;
+95.273155   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6481
+ Longitude:         -121.9649
+ Altitude:          3200 ft (barometric)
+ N/S velocity:      42 kt
+ E/W velocity:      -103 kt
+ Track:             292
+ Speed:             111 kt
+ Vertical rate:     -128 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0325 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      3
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3350 ft (geometric)
+=============================================
+
+-00ad7233358b455289d60a9900ae34203900;
+95.590648   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6481
+ Longitude:         -121.9652
+ Altitude:          3200 ft (barometric)
+ N/S velocity:      42 kt
+ E/W velocity:      -103 kt
+ Track:             292
+ Speed:             111 kt
+ Vertical rate:     -128 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a78bea35719f5281aa045900fe24c03800;
+95.627871   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5777
+ Longitude:         -121.9876
+ Altitude:          700 ft (barometric)
+ N/S velocity:      62 kt
+ E/W velocity:      -72 kt
+ Track:             310
+ Speed:             95 kt
+ Vertical rate:     128 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a78bea3571bf52817c045900fe24c04f00000000000000000000000004c0000000;
+96.791597   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A78BEA (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.5780
+ Longitude:         -121.9881
+ Altitude:          700 ft (barometric)
+ N/S velocity:      62 kt
+ E/W velocity:      -72 kt
+ Track:             310
+ Speed:             95 kt
+ Vertical rate:     192 ft/min (barometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     875 ft (geometric)
+=============================================
+
+-00ad7233358b6b52895a0a9900a634a02c00;
+97.855352   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6485
+ Longitude:         -121.9665
+ Altitude:          3200 ft (barometric)
+ N/S velocity:      40 kt
+ E/W velocity:      -104 kt
+ Track:             291
+ Speed:             111 kt
+ Vertical rate:     -64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
++3514c952d65ca2b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+98.307306   Uplink MDB received
+=============================================
+=============================================
+
+-00ad7233358b8352890a0a9900a235202f00;
+99.220573   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6488
+ Longitude:         -121.9674
+ Altitude:          3200 ft (barometric)
+ N/S velocity:      39 kt
+ E/W velocity:      -105 kt
+ Track:             290
+ Speed:             112 kt
+ Vertical rate:     -64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00ad7233358ba55288980a8900a234a02800;
+101.280780   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6492
+ Longitude:         -121.9686
+ Altitude:          3175 ft (barometric)
+ N/S velocity:      39 kt
+ E/W velocity:      -104 kt
+ Track:             290
+ Speed:             111 kt
+ Vertical rate:     -64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
++3514c952d65ca6b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+102.329222   Uplink MDB received
+=============================================
+=============================================
+
++3514c952d65cafb000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+102.378721   Uplink MDB received
+=============================================
+=============================================
+
+-00ad7233358c2b5286ce0a89009a36202800;
+109.227366   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6506
+ Longitude:         -121.9735
+ Altitude:          3175 ft (barometric)
+ N/S velocity:      37 kt
+ E/W velocity:      -107 kt
+ Track:             289
+ Speed:             113 kt
+ Vertical rate:     -64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08ad7233358c435286720a89009a36202f06430d6ded2d0bcea4c080000ae0000000;
+110.836832   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6509
+ Longitude:         -121.9745
+ Altitude:          3175 ft (barometric)
+ N/S velocity:      37 kt
+ E/W velocity:      -107 kt
+ Track:             289
+ Speed:             113 kt
+ Vertical rate:     -64 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0325 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      51
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3325 ft (geometric)
+=============================================
+
+-00ad7233358c535286380a89009636001900;
+111.843062   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.6510
+ Longitude:         -121.9751
+ Altitude:          3175 ft (barometric)
+ N/S velocity:      36 kt
+ E/W velocity:      -107 kt
+ Track:             288
+ Speed:             112 kt
+ Vertical rate:     0 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a2551b35179752b6de051a11001980880000000000000000000000000570000000;
+113.004335   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A2551B (ICAO address via ADS-B)
+SV:
+ NIC:               10
+ Latitude:          +37.3304
+ Longitude:         -121.8415
+ Altitude:          1000 ft (barometric)
+ N/S velocity:      -63 kt
+ E/W velocity:      50 kt
+ Track:             141
+ Speed:             80 kt
+ Vertical rate:     448 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     1150 ft (geometric)
+=============================================
+
+-00a04568350c2b526b760b1911f411009f00;
+113.109527   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2990
+ Longitude:         -122.0486
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      -124 kt
+ E/W velocity:      33 kt
+ Track:             165
+ Speed:             128 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a04568350c01526b840b1911f41100a809d9073469c40b7ea4c2a0000b90000000;
+113.876011   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2986
+ Longitude:         -122.0484
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      -124 kt
+ E/W velocity:      33 kt
+ Track:             165
+ Speed:             128 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      31
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3600 ft (geometric)
+=============================================
+
+-10a2551b35177d52b6fa051a11041980880000000000000000000000000570000000;
+113.936066   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A2551B (ICAO address via ADS-B)
+SV:
+ NIC:               10
+ Latitude:          +37.3301
+ Longitude:         -121.8412
+ Altitude:          1000 ft (barometric)
+ N/S velocity:      -64 kt
+ E/W velocity:      50 kt
+ Track:             142
+ Speed:             81 kt
+ Vertical rate:     448 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     1150 ft (geometric)
+=============================================
+
+-08a04568350bcb526b960b1911f011009806431335ed2d0b12a4c0a0000b90000000;
+115.061236   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2980
+ Longitude:         -122.0483
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      -123 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             127 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      4
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3600 ft (geometric)
+=============================================
+
+-00a04568350bab526ba20b1911f011009c00;
+115.631975   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2977
+ Longitude:         -122.0481
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      -123 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             127 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a04568350b6b526bb80b1911f01100a80000000000000000000000000ba0000000;
+116.805201   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2970
+ Longitude:         -122.0479
+ Altitude:          3400 ft (barometric)
+ N/S velocity:      -123 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             127 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3625 ft (geometric)
+=============================================
+
+-00a2551b35170752b76c052a11041a00ae00;
+118.115979   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A2551B (ICAO address via ADS-B)
+SV:
+ NIC:               10
+ Latitude:          +37.3289
+ Longitude:         -121.8400
+ Altitude:          1025 ft (barometric)
+ N/S velocity:      -64 kt
+ E/W velocity:      51 kt
+ Track:             141
+ Speed:             81 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a04568350b21526bd00b2911f01100a800;
+118.179672   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2962
+ Longitude:         -122.0476
+ Altitude:          3425 ft (barometric)
+ N/S velocity:      -123 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             127 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a2551b3516f752b77e052a11041a00a80000000000000000000000000580000000;
+118.852714   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A2551B (ICAO address via ADS-B)
+SV:
+ NIC:               10
+ Latitude:          +37.3287
+ Longitude:         -121.8398
+ Altitude:          1025 ft (barometric)
+ N/S velocity:      -64 kt
+ E/W velocity:      51 kt
+ Track:             141
+ Speed:             81 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     1175 ft (geometric)
+=============================================
+
+-00a04568350aeb526be20b3911f01180af00;
+119.136903   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2956
+ Longitude:         -122.0474
+ Altitude:          3450 ft (barometric)
+ N/S velocity:      -123 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             127 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a04568350ad7526bea0b3911f01180aa09d9073469c40b0ea4c2a0000bb0000000;
+119.516895   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2954
+ Longitude:         -122.0474
+ Altitude:          3450 ft (barometric)
+ N/S velocity:      -123 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             127 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      3
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3650 ft (geometric)
+=============================================
+
+-00a04568350aa1526bfc0b3911ec1180af00;
+120.664871   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2948
+ Longitude:         -122.0472
+ Altitude:          3450 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a04568350a63526c120b3911ec1180b80000000000000000000000000bc0000000;
+121.848346   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2941
+ Longitude:         -122.0469
+ Altitude:          3450 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3675 ft (geometric)
+=============================================
+
+-10a04568350a39526c200b4911ec1180b80000000000000000000000000bc0000000;
+122.580581   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2937
+ Longitude:         -122.0468
+ Altitude:          3475 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3675 ft (geometric)
+=============================================
+
+-00a04568350a03526c320b4911ec1180b800;
+123.568311   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2931
+ Longitude:         -122.0466
+ Altitude:          3475 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a045683509af526c500b5911ec1100bf06431335ed2d0bdea4c0a0000bd0000000;
+125.089780   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2922
+ Longitude:         -122.0463
+ Altitude:          3500 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      55
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3700 ft (geometric)
+=============================================
+
+-00a0456835099b526c580b5911ec1100b800;
+125.483272   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2920
+ Longitude:         -122.0462
+ Altitude:          3500 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a04568350951526c700b5911ec1100a800;
+126.991740   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2912
+ Longitude:         -122.0459
+ Altitude:          3500 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a04568350911526c860b6911ec1100ba0000000000000000000000000be0000000;
+128.189215   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2905
+ Longitude:         -122.0457
+ Altitude:          3525 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3725 ft (geometric)
+=============================================
+
+-00a045683508e7526c940b6911ec1100bf00;
+128.880451   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2901
+ Longitude:         -122.0455
+ Altitude:          3525 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a045683508b3526ca60b7911ec1100b809d9073469c40beaa4c2a0000bf0000000;
+129.882431   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2895
+ Longitude:         -122.0453
+ Altitude:          3550 ft (barometric)
+ N/S velocity:      -122 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             126 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      58
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3750 ft (geometric)
+=============================================
+
+-08a04568350889526cb40b7911e81100b806431335ed2d0b62a4c0a0000c00000000;
+130.761912   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2891
+ Longitude:         -122.0452
+ Altitude:          3550 ft (barometric)
+ N/S velocity:      -121 kt
+ E/W velocity:      33 kt
+ Track:             164
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      24
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3775 ft (geometric)
+=============================================
+
+-00a0456835083f526cce0b7911e81180b800;
+132.167883   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2883
+ Longitude:         -122.0449
+ Altitude:          3550 ft (barometric)
+ N/S velocity:      -121 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a0456835082b526cd40b8911e81180ce0000000000000000000000000c00000000;
+132.633124   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2880
+ Longitude:         -122.0448
+ Altitude:          3575 ft (barometric)
+ N/S velocity:      -121 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             125 kt
+ Vertical rate:     704 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3775 ft (geometric)
+=============================================
+
+-00a045683507d7526cf20b8911e41180bf00;
+134.243590   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2871
+ Longitude:         -122.0445
+ Altitude:          3575 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      34 kt
+ Track:             164
+ Speed:             124 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a045683507c3526cfa0b9911e41200b800;
+134.494335   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2869
+ Longitude:         -122.0444
+ Altitude:          3600 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a0456835078f526d0c0b9911e41200b909d9073469c40b96a4c2a0000c20000000;
+135.509064   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2864
+ Longitude:         -122.0442
+ Altitude:          3600 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      37
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3825 ft (geometric)
+=============================================
+
+-00a04568350745526d280ba911e41200bf00;
+136.952035   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2856
+ Longitude:         -122.0439
+ Altitude:          3625 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a0456835071d526d360ba911e41200b80000000000000000000000000c30000000;
+137.772518   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2852
+ Longitude:         -122.0438
+ Altitude:          3625 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3850 ft (geometric)
+=============================================
+
+-10a045683506e9526d4a0bb911e41200b80000000000000000000000000c30000000;
+138.801246   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2846
+ Longitude:         -122.0436
+ Altitude:          3650 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3850 ft (geometric)
+=============================================
+
+-00a045683506b5526d5c0bb911e41200b800;
+139.825975   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2840
+ Longitude:         -122.0434
+ Altitude:          3650 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a0456835066d526d760bb911e41200b806431335ed2d0b4ea4c0a0000c40000000;
+141.240446   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2833
+ Longitude:         -122.0431
+ Altitude:          3650 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      19
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3875 ft (geometric)
+=============================================
+
+-00a0456835064d526d820bc911e41200bf00;
+141.671187   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2829
+ Longitude:         -122.0430
+ Altitude:          3675 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a04568350623526d920bc911e41200c800;
+142.473921   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2825
+ Longitude:         -122.0428
+ Altitude:          3675 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     704 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a045683505d1526db00bd911e41200c90000000000000000000000000c50000000;
+144.107637   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2816
+ Longitude:         -122.0425
+ Altitude:          3700 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     704 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3900 ft (geometric)
+=============================================
+
+-00a045683505bd526db60bd911e41200cf00;
+144.494879   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2814
+ Longitude:         -122.0424
+ Altitude:          3700 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     704 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a04568350569526dd40bd911e41200b809d9073469c40b9ea4c2a0000c60000000;
+146.133345   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2805
+ Longitude:         -122.0421
+ Altitude:          3700 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      39
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3925 ft (geometric)
+=============================================
+
+-08a04568350535526de80be911e41200b806431335ed2d0b02a4c0a0000c70000000;
+147.107575   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2799
+ Longitude:         -122.0419
+ Altitude:          3725 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      0
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3950 ft (geometric)
+=============================================
+
+-00a04568350517526df40be911e41200bf00;
+147.752062   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2796
+ Longitude:         -122.0418
+ Altitude:          3725 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a045683504ed526e020bf911e41200a80000000000000000000000000c70000000;
+148.516046   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2791
+ Longitude:         -122.0416
+ Altitude:          3750 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     3950 ft (geometric)
+=============================================
+
+-00a045683504b9526e160bf911e41200a800;
+149.563775   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2786
+ Longitude:         -122.0414
+ Altitude:          3750 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a04568350471526e300c0911e412009f00;
+150.915997   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2778
+ Longitude:         -122.0411
+ Altitude:          3775 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a0456835043d526e420c0911e412009909d9073469c40b62a4c2a0000c80000000;
+151.969475   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2773
+ Longitude:         -122.0409
+ Altitude:          3775 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      24
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     3975 ft (geometric)
+=============================================
+
+-00a045683503fd526e580c0911e412009f00;
+153.106202   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2766
+ Longitude:         -122.0407
+ Altitude:          3775 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a045683503e9526e600c0911e41200980000000000000000000000000c90000000;
+153.564943   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2764
+ Longitude:         -122.0406
+ Altitude:          3775 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4000 ft (geometric)
+=============================================
+
+-10a04568350395526e7e0c1911e41200980000000000000000000000000c90000000;
+155.091161   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2755
+ Longitude:         -122.0403
+ Altitude:          3800 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4000 ft (geometric)
+=============================================
+
+-00a04568350381526e860c1911e412009800;
+155.554402   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2752
+ Longitude:         -122.0402
+ Altitude:          3800 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      35 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a2551b3512b552bbf405aa11341e804800;
+156.482184   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A2551B (ICAO address via ADS-B)
+SV:
+ NIC:               10
+ Latitude:          +37.3170
+ Longitude:         -121.8275
+ Altitude:          1225 ft (barometric)
+ N/S velocity:      -76 kt
+ E/W velocity:      60 kt
+ Track:             141
+ Speed:             96 kt
+ Vertical rate:     192 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a0456835034d526e9a0c1911e412809e06431335ed2d0b86a4c0a0000ca0000000;
+156.667629   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2747
+ Longitude:         -122.0400
+ Altitude:          3800 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      33
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     4025 ft (geometric)
+=============================================
+
+-00a04568350319526eac0c2911e41280a800;
+157.534861   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2741
+ Longitude:         -122.0398
+ Altitude:          3825 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a045683502d1526ec80c3911e41280a800;
+159.035080   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2733
+ Longitude:         -122.0395
+ Altitude:          3850 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a045683502b3526ed40c3911e41280a90000000000000000000000000cb0000000;
+159.508071   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2730
+ Longitude:         -122.0394
+ Altitude:          3850 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4050 ft (geometric)
+=============================================
+
+-00a0456835025f526ef40c3911e41300af00;
+161.195537   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2721
+ Longitude:         -122.0390
+ Altitude:          3850 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             125 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a0456835022b526f080c3911e41300b809d9073469c40be6a4c2a0000cc0000000;
+162.073519   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2716
+ Longitude:         -122.0388
+ Altitude:          3850 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      57
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     4075 ft (geometric)
+=============================================
+
+-08a04568350217526f100c3911e41300b806431335ed2d0bd2a4c0a0000cc0000000;
+162.544259   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2714
+ Longitude:         -122.0387
+ Altitude:          3850 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      52
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     4075 ft (geometric)
+=============================================
+
+-00a045683501cf526f2a0c4911e41280b800;
+164.025728   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2706
+ Longitude:         -122.0384
+ Altitude:          3875 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a045683501a5526f3a0c4911e41280be0000000000000000000000000cd0000000;
+164.684715   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2701
+ Longitude:         -122.0383
+ Altitude:          3875 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4100 ft (geometric)
+=============================================
+
+-00a04568350171526f4e0c5911e41280bf00;
+165.771443   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2696
+ Longitude:         -122.0380
+ Altitude:          3900 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a04568350133526f660c6911e41280c900;
+167.018668   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2689
+ Longitude:         -122.0378
+ Altitude:          3925 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     704 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a045683500f5526f7e0c6911e41280b909d9073469c40b3ea4c2a0000cf0000000;
+168.110895   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2682
+ Longitude:         -122.0375
+ Altitude:          3925 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N1164G
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      15
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     4150 ft (geometric)
+=============================================
+
+-08a2551b35112752bd7605ca11101f006809da1a710c040beea502a0000610000000;
+168.800932   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A2551B (ICAO address via ADS-B)
+SV:
+ NIC:               10
+ Latitude:          +37.3127
+ Longitude:         -121.8234
+ Altitude:          1275 ft (barometric)
+ N/S velocity:      -67 kt
+ E/W velocity:      61 kt
+ Track:             137
+ Speed:             90 kt
+ Vertical rate:     320 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          N24991
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      59
+ NACp:              10
+ NACv:              2
+ NICbaro:           1
+ Capabilities:      
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     1400 ft (geometric)
+=============================================
+
+-00a045683500cd526f8e0c7911e41280bf00;
+168.942628   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2678
+ Longitude:         -122.0374
+ Altitude:          3950 ft (barometric)
+ N/S velocity:      -120 kt
+ E/W velocity:      36 kt
+ Track:             163
+ Speed:             125 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-10a04568350099526fa20c7911e01300b80000000000000000000000000d00000000;
+170.039856   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2673
+ Longitude:         -122.0371
+ Altitude:          3950 ft (barometric)
+ N/S velocity:      -119 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             124 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4175 ft (geometric)
+=============================================
+
+-10a0456835006f526fb00c7911e01300b80000000000000000000000000d00000000;
+170.858839   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2668
+ Longitude:         -122.0370
+ Altitude:          3950 ft (barometric)
+ N/S velocity:      -119 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             124 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4175 ft (geometric)
+=============================================
+
+-10a2551b3510d152bdde05ca11002080480000000000000000000000000620000000;
+171.841120   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A2551B (ICAO address via ADS-B)
+SV:
+ NIC:               10
+ Latitude:          +37.3118
+ Longitude:         -121.8223
+ Altitude:          1275 ft (barometric)
+ N/S velocity:      -63 kt
+ E/W velocity:      64 kt
+ Track:             134
+ Speed:             89 kt
+ Vertical rate:     192 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     1425 ft (geometric)
+=============================================
+
+-00a04568350027526fcc0c7911e01300b800;
+172.160813   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2660
+ Longitude:         -122.0367
+ Altitude:          3950 ft (barometric)
+ N/S velocity:      -119 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             124 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08a0456834ffff526fdc0c8911e01300b806431335ed2d0b3ea4c0a0000d10000000;
+172.966796   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2656
+ Longitude:         -122.0365
+ Altitude:          3975 ft (barometric)
+ N/S velocity:      -119 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             124 kt
+ Vertical rate:     640 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0332 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      15
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     4200 ft (geometric)
+=============================================
+
+-00a0456834ffdf526fe80c8911e01300af00;
+173.473786   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2653
+ Longitude:         -122.0364
+ Altitude:          3975 ft (barometric)
+ N/S velocity:      -119 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             124 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-00a0456834ffab526ffc0c9911e01300a900;
+174.494766   Basic UAT MDB received
+=============================================
+HDR:
+ MDB Type:          0
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2647
+ Longitude:         -122.0362
+ Altitude:          4000 ft (barometric)
+ N/S velocity:      -119 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             124 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+=============================================
+
+-08ad723335abef523782081910682b009806430d6ded2d0b42a4c080000860000000;
+174.566155   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          1
+ Address:           AD7233 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.7378
+ Longitude:         -122.1913
+ Altitude:          2200 ft (barometric)
+ N/S velocity:      -25 kt
+ E/W velocity:      85 kt
+ Track:             106
+ Speed:             88 kt
+ Vertical rate:     512 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+MS:
+ Emitter category:  Light <= 7000kg
+ Callsign:          0325 (alternative)
+ Emergency status:  No emergency
+ UAT version:       2
+ SIL:               3
+ Transmit MSO:      16
+ NACp:              10
+ NACv:              2
+ NICbaro:           0
+ Capabilities:      CDTI ACAS 
+ Active modes:      
+ Target track type: true heading
+AUXSV:
+ Sec. altitude:     2325 ft (geometric)
+=============================================
+
+-10a0456834ff6f5270160c9911e01300a90000000000000000000000000d20000000;
+175.805739   Long UAT MDB received
+=============================================
+HDR:
+ MDB Type:          2
+ Address:           A04568 (ICAO address via ADS-B)
+SV:
+ NIC:               9
+ Latitude:          +37.2641
+ Longitude:         -122.0359
+ Altitude:          4000 ft (barometric)
+ N/S velocity:      -119 kt
+ E/W velocity:      37 kt
+ Track:             162
+ Speed:             124 kt
+ Vertical rate:     576 ft/min (geometric)
+ UTC coupling:      yes
+ TIS-B site ID:     0
+AUXSV:
+ Sec. altitude:     4225 ft (geometric)
+=============================================
+

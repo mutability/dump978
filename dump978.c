@@ -39,8 +39,13 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input);
 #define UPLINK_POLY 0x187
 #define ADSB_POLY 0x187
 
+static int raw_mode = 0;
+
 int main(int argc, char **argv)
 {
+    if (argc > 1 && !strcmp(argv[1], "-raw"))
+        raw_mode = 1;
+
     rs_adsb_short = init_rs_char(8, /* gfpoly */ ADSB_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 12, /* pad */ 225);
     rs_adsb_long  = init_rs_char(8, /* gfpoly */ ADSB_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 14, /* pad */ 207);
     rs_uplink     = init_rs_char(8, /* gfpoly */ UPLINK_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 20, /* pad */ 163);
@@ -48,6 +53,18 @@ int main(int argc, char **argv)
     make_atan2_table();
     read_from_stdin();
     return 0;
+}
+
+static void dump_raw_message(char updown, uint8_t *data, int len)
+{
+    int i;
+
+    fprintf(stdout, "%c", updown);
+    for (i = 0; i < len; ++i) {
+        fprintf(stdout, "%02x", data[i]);
+    }
+
+    fprintf(stdout, ";\n");
 }
 
 
@@ -259,14 +276,17 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
         if (n_corrected < 0)
             return 0;
 
-        uat_decode_adsb_mdb(framedata, &mdb);
-
-        fprintf(stdout,
-                "%.6f   Basic UAT MDB received\n"
-                "---------------------------------------------\n",
-                timestamp / 2083334.0 / 2);
-        uat_display_adsb_mdb(&mdb, stdout);
-        fprintf(stdout, "---------------------------------------------\n\n");
+        dump_raw_message('-', framedata, 144/8);
+        if (!raw_mode) {
+            uat_decode_adsb_mdb(framedata, &mdb);
+            
+            fprintf(stdout,
+                    "%.6f   Basic UAT MDB received\n"
+                    "=============================================\n",
+                    timestamp / 2083334.0 / 2);
+            uat_display_adsb_mdb(&mdb, stdout);
+            fprintf(stdout, "=============================================\n\n");
+        }
 
         return (144+96)*4;
     }
@@ -276,14 +296,17 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
     if (n_corrected < 0)
         return 0;
 
-    uat_decode_adsb_mdb(framedata, &mdb);
-
-    fprintf(stdout,
-            "%.6f   Long UAT MDB received\n"
-            "---------------------------------------------\n",
-            timestamp / 2083334.0 / 2);
-    uat_display_adsb_mdb(&mdb, stdout);
-    fprintf(stdout, "---------------------------------------------\n\n");
+    dump_raw_message('-', framedata, 272/8);
+    if (!raw_mode) {
+        uat_decode_adsb_mdb(framedata, &mdb);
+        
+        fprintf(stdout,
+                "%.6f   Long UAT MDB received\n"
+                "=============================================\n",
+                timestamp / 2083334.0 / 2);
+        uat_display_adsb_mdb(&mdb, stdout);
+        fprintf(stdout, "=============================================\n\n");
+    }
 
     return (272+112)*4;
 }
@@ -424,12 +447,15 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
         memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
     }
 
-    fprintf(stdout,
-            "%.6f   Uplink MDB received\n"
-            "---------------------------------------------\n",
-            timestamp / 2083334.0 / 2);
-    //decode_uplink_mdb(deinterleaved);
-    fprintf(stdout, "---------------------------------------------\n\n");
+    dump_raw_message('+', deinterleaved, 72*6);
+    if (!raw_mode) {
+        fprintf(stdout,
+                "%.6f   Uplink MDB received\n"
+                "=============================================\n",
+                timestamp / 2083334.0 / 2);
+        //decode_uplink_mdb(deinterleaved);
+        fprintf(stdout, "=============================================\n\n");
+    }
 
     return UPLINK_FRAME_LENGTH*4;
 }
