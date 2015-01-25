@@ -93,9 +93,28 @@ void make_atan2_table()
 #define UPLINK_SYNC_WORD 0x153225B1DUL
 #define SYNC_MASK 0xFFFFFFFFFUL
 
-#define SYNC_LENGTH (36)
-#define ADSB_FRAME_LENGTH (272+112)
-#define UPLINK_FRAME_LENGTH ((576+160)*6)
+#define SYNC_BITS (36)
+
+#define SHORT_FRAME_DATA_BITS (144)
+#define SHORT_FRAME_BITS (SHORT_FRAME_DATA_BITS+96)
+#define SHORT_FRAME_DATA_BYTES (SHORT_FRAME_DATA_BITS/8)
+#define SHORT_FRAME_BYTES (SHORT_FRAME_BITS/8)
+
+#define LONG_FRAME_DATA_BITS (272)
+#define LONG_FRAME_BITS (LONG_FRAME_DATA_BITS+112)
+#define LONG_FRAME_DATA_BYTES (LONG_FRAME_DATA_BITS/8)
+#define LONG_FRAME_BYTES (LONG_FRAME_BITS/8)
+
+#define UPLINK_BLOCK_DATA_BITS (576)
+#define UPLINK_BLOCK_BITS (UPLINK_BLOCK_DATA_BITS+160)
+#define UPLINK_BLOCK_DATA_BYTES (UPLINK_BLOCK_DATA_BITS/8)
+#define UPLINK_BLOCK_BYTES (UPLINK_BLOCK_BITS/8)
+
+#define UPLINK_FRAME_BLOCKS (6)
+#define UPLINK_FRAME_DATA_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_DATA_BITS)
+#define UPLINK_FRAME_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_BITS)
+#define UPLINK_FRAME_DATA_BYTES (UPLINK_FRAME_DATA_BITS/8)
+#define UPLINK_FRAME_BYTES (UPLINK_FRAME_BITS/8)
 
 void read_from_stdin()
 {
@@ -183,7 +202,7 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
     // our caller will pass the remaining data back to us as the
     // start of the buffer next time. This means we don't need to maintain
     // state between calls.
-    for (i = 2; i+(SYNC_LENGTH+UPLINK_FRAME_LENGTH+3)*4 < len; i += 4) {
+    for (i = 2; i+(SYNC_BITS+UPLINK_FRAME_BITS+3)*4 < len; i += 4) {
         uint16_t phi0 = iqphase(input[i+0], input[i+1]);
         uint16_t phi1 = iqphase(input[i+2], input[i+3]);
         int16_t dphi0 = phi0 - last_phi;  // don't need to worry about wrapping at +/-pi, the width of the datatype does it for us
@@ -249,7 +268,8 @@ void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
 int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
 {
     int i;
-    uint8_t framedata[ADSB_FRAME_LENGTH/8];
+    uint8_t framedata[LONG_FRAME_BYTES];
+    uint8_t short_framedata[SHORT_FRAME_BYTES];
     int16_t average_dphi;
     int32_t separation;
     struct uat_adsb_mdb mdb;
@@ -261,7 +281,7 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
 
     memset(framedata, 0, sizeof(framedata));
 
-    for (i = 0; i < ADSB_FRAME_LENGTH; ++i) {
+    for (i = 0; i < LONG_FRAME_BITS; ++i) {
         uint16_t phi0 = iqphase(input[i*4+0], input[i*4+1]);
         uint16_t phi1 = iqphase(input[i*4+2], input[i*4+3]);
         int16_t dphi = phi1 - phi0;
@@ -270,15 +290,32 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
             framedata[i/8] |= (1 << (7 - (i&7)));
     }
 
-    if ((framedata[0] >> 3) == 0) {
-        // "Basic UAT ADS-B Message": 144 data bits, 96 FEC bits
-        n_corrected = decode_rs_char(rs_adsb_short, framedata, NULL, 0);
-        if (n_corrected < 0)
-            return 0;
-
-        dump_raw_message('-', framedata, 144/8);
+    // Try decoding as a Long UAT. Copy the data first in case we have to fall back
+    // to Basic UAT.
+    memcpy(short_framedata, framedata, SHORT_FRAME_BYTES);
+    n_corrected = decode_rs_char(rs_adsb_long, framedata, NULL, 0);
+    if (n_corrected >= 0 && n_corrected <= 7 && (framedata[0]>>3) != 0) {
+        dump_raw_message('-', framedata, LONG_FRAME_DATA_BYTES);
         if (!raw_mode) {
             uat_decode_adsb_mdb(framedata, &mdb);
+            
+            fprintf(stdout,
+                    "%.6f   Long UAT MDB received\n"
+                    "=============================================\n",
+                    timestamp / 2083334.0 / 2);
+            uat_display_adsb_mdb(&mdb, stdout);
+            fprintf(stdout, "=============================================\n\n");
+        }
+        
+        return LONG_FRAME_BITS*4;
+    }
+
+    // Retry as Basic UAT
+    n_corrected = decode_rs_char(rs_adsb_short, short_framedata, NULL, 0);
+    if (n_corrected >= 0 && n_corrected <= 6 && (short_framedata[0]>>3) == 0) {
+        dump_raw_message('-', short_framedata, SHORT_FRAME_DATA_BYTES);
+        if (!raw_mode) {
+            uat_decode_adsb_mdb(short_framedata, &mdb);
             
             fprintf(stdout,
                     "%.6f   Basic UAT MDB received\n"
@@ -288,27 +325,11 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
             fprintf(stdout, "=============================================\n\n");
         }
 
-        return (144+96)*4;
-    }
-    
-    // "Long UAT ADS-B Message": 272 data bits, 112 FEC bits
-    n_corrected = decode_rs_char(rs_adsb_long, framedata, NULL, 0);
-    if (n_corrected < 0)
-        return 0;
-
-    dump_raw_message('-', framedata, 272/8);
-    if (!raw_mode) {
-        uat_decode_adsb_mdb(framedata, &mdb);
-        
-        fprintf(stdout,
-                "%.6f   Long UAT MDB received\n"
-                "=============================================\n",
-                timestamp / 2083334.0 / 2);
-        uat_display_adsb_mdb(&mdb, stdout);
-        fprintf(stdout, "=============================================\n\n");
+        return SHORT_FRAME_BITS*4;
     }
 
-    return (272+112)*4;
+    // Nope.
+    return 0;
 }
 
 void decode_fisb_apdu(uint8_t *pdu, int length)
@@ -412,42 +433,44 @@ void decode_uplink_mdb(uint8_t *blockdata)
 int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
 {
     int i, block;
-    uint8_t framedata[UPLINK_FRAME_LENGTH/8];
+    uint8_t interleaved[UPLINK_FRAME_BYTES];
     int16_t average_dphi;
     int32_t separation;
-    uint8_t deinterleaved[432];
+    uint8_t deinterleaved[UPLINK_FRAME_DATA_BYTES];
 
     if (!find_average_dphi(input-36*4, UPLINK_SYNC_WORD, &average_dphi, &separation)) {
         return 0;
     }
 
-    memset(framedata, 0, sizeof(framedata));
+    memset(interleaved, 0, sizeof(interleaved));
 
-    for (i = 0; i < UPLINK_FRAME_LENGTH; ++i) {
+    for (i = 0; i < UPLINK_FRAME_BITS; ++i) {
         uint16_t phi0 = iqphase(input[i*4+0], input[i*4+1]);
         uint16_t phi1 = iqphase(input[i*4+2], input[i*4+3]);
         int16_t dphi = phi1 - phi0;
         
         if (dphi > average_dphi)
-            framedata[i/8] |= (1 << (7 - (i&7)));
+            interleaved[i/8] |= (1 << (7 - (i&7)));
     }
 
     // deinterleave blocks
-    for (block = 0; block < 6; ++block) {
-        uint8_t blockdata[92];
+    for (block = 0; block < UPLINK_FRAME_BLOCKS; ++block) {
+        uint8_t blockdata[UPLINK_BLOCK_BYTES];
         int n_corrected;
         
-        for (i = 0; i < 92; ++i)
-            blockdata[i] = framedata[i * 6 + block];
+        for (i = 0; i < UPLINK_BLOCK_BYTES; ++i)
+            blockdata[i] = interleaved[i * UPLINK_FRAME_BLOCKS + block];
 
         n_corrected = decode_rs_char(rs_uplink, blockdata, NULL, 0);
-        if (n_corrected < 0)
+        if (n_corrected < 0 || n_corrected > 10) {
+            //fprintf(stdout, "fail %d %d\n", block, n_corrected);
             return 0;
+        }
 
-        memcpy (deinterleaved + 72*block, blockdata, 72); // drop the trailing ECC part
+        memcpy (deinterleaved + UPLINK_BLOCK_DATA_BYTES*block, blockdata, UPLINK_BLOCK_DATA_BYTES); // drop the trailing ECC part
     }
 
-    dump_raw_message('+', deinterleaved, 72*6);
+    dump_raw_message('+', deinterleaved, UPLINK_FRAME_DATA_BYTES);
     if (!raw_mode) {
         fprintf(stdout,
                 "%.6f   Uplink MDB received\n"
@@ -457,7 +480,7 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
         fprintf(stdout, "=============================================\n\n");
     }
 
-    return UPLINK_FRAME_LENGTH*4;
+    return UPLINK_FRAME_BITS*4;
 }
 
 
