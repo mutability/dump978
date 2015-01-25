@@ -305,7 +305,8 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
             uat_display_adsb_mdb(&mdb, stdout);
             fprintf(stdout, "=============================================\n\n");
         }
-        
+
+        fflush(stdout);
         return LONG_FRAME_BITS*4;
     }
 
@@ -324,6 +325,7 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
             fprintf(stdout, "=============================================\n\n");
         }
 
+        fflush(stdout);
         return SHORT_FRAME_BITS*4;
     }
 
@@ -479,6 +481,7 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
         fprintf(stdout, "=============================================\n\n");
     }
 
+    fflush(stdout);
     return UPLINK_FRAME_BITS*4;
 }
 
