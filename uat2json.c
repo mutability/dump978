@@ -398,7 +398,7 @@ static void read_loop()
         if (bytes_read == 0)
             return;
 
-        if (bytes_read < 0 && errno != EAGAIN && errno != EINTR) {
+        if (bytes_read < 0 && errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK) {
             perror("read");
             return;
         }
