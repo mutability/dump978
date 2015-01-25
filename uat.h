@@ -31,7 +31,7 @@ struct uat_hdr {
 };
 
 typedef enum { BARO, GEO } altitude_type_t;
-typedef enum { AIRBORNE_SUBSONIC, AIRBORNE_SUPERSONIC, GROUND } airground_state_t;
+typedef enum { AIRBORNE_SUBSONIC=0, AIRBORNE_SUPERSONIC=1, GROUND=2, AIRGROUND_RESERVED=3 } airground_state_t;
 typedef enum { AIRBORNE_TRACK, GROUND_TRACK, GROUND_MAG_HEADING, GROUND_TRUE_HEADING } track_type_t;
 
 // A decoded State Vector element (TIS-B or ADS-B)
