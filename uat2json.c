@@ -405,16 +405,18 @@ static void read_loop()
 
         NOW = time(NULL);
 
-        used += bytes_read;
-        consumed = process_input(buf, used);
+        if (bytes_read > 0) {
+            used += bytes_read;
+            consumed = process_input(buf, used);
 
-        if (used == sizeof(buf) && consumed == 0) {
-            fprintf(stderr, "line too long, ditching input\n");
-            used = 0;
-        } else {
-            used -= consumed;
-            if (used > 0)
-                memmove(buf, buf+consumed, used);
+            if (used == sizeof(buf) && consumed == 0) {
+                fprintf(stderr, "line too long, ditching input\n");
+                used = 0;
+            } else {
+                used -= consumed;
+                if (used > 0)
+                    memmove(buf, buf+consumed, used);
+            }
         }
 
         periodic_work();
