@@ -194,8 +194,10 @@ static int write_receiver_json(const char *dir)
     if (snprintf(path, PATH_MAX, "%s/receiver.json", dir) >= PATH_MAX)
         return 0;
 
-    if (!(f = fopen(path, "w")))
+    if (!(f = fopen(path, "w"))) {
+        perror("fopen(receiver.json)");
         return 0;
+    }
 
     fprintf(f,
             "{\n"
@@ -216,8 +218,10 @@ static int write_aircraft_json(const char *dir)
     if (snprintf(path, PATH_MAX, "%s/aircraft.json", dir) >= PATH_MAX)
         return 0;
 
-    if (!(f = fopen(path, "w")))
+    if (!(f = fopen(path, "w"))) {
+        perror("fopen(aircraft.json)");
         return 0;
+    }
 
     fprintf(f,
             "{\n"
@@ -438,7 +442,10 @@ int main(int argc, char **argv)
 
     json_dir = argv[1];
 
-    write_receiver_json(json_dir);
+    if (!write_receiver_json(json_dir)) {
+        fprintf(stderr, "Failed to write receiver.json - check permissions?\n");
+        return 1;
+    }
     read_loop();
     write_aircraft_json(json_dir);
     return 0;
