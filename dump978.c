@@ -30,14 +30,42 @@ void *rs_uplink;
 void *rs_adsb_short;
 void *rs_adsb_long;
 
-void make_atan2_table();
-void read_from_stdin();
-int process_buffer(uint16_t *phi, int len, uint64_t offset);
-int decode_adsb_frame(uint64_t timestamp, uint16_t *phi);
-int decode_uplink_frame(uint64_t timestamp, uint16_t *phi);
+static void make_atan2_table();
+static void read_from_stdin();
+static int process_buffer(uint16_t *phi, int len, uint64_t offset);
+static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
+static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
+static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center_dphi);
+static void handle_adsb_frame(uint64_t timestamp, uint8_t *frame, int rs);
+static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs);
 
 #define UPLINK_POLY 0x187
 #define ADSB_POLY 0x187
+
+#define SYNC_BITS (36)
+#define ADSB_SYNC_WORD   0xEACDDA4E2UL
+#define UPLINK_SYNC_WORD 0x153225B1DUL
+
+#define SHORT_FRAME_DATA_BITS (144)
+#define SHORT_FRAME_BITS (SHORT_FRAME_DATA_BITS+96)
+#define SHORT_FRAME_DATA_BYTES (SHORT_FRAME_DATA_BITS/8)
+#define SHORT_FRAME_BYTES (SHORT_FRAME_BITS/8)
+
+#define LONG_FRAME_DATA_BITS (272)
+#define LONG_FRAME_BITS (LONG_FRAME_DATA_BITS+112)
+#define LONG_FRAME_DATA_BYTES (LONG_FRAME_DATA_BITS/8)
+#define LONG_FRAME_BYTES (LONG_FRAME_BITS/8)
+
+#define UPLINK_BLOCK_DATA_BITS (576)
+#define UPLINK_BLOCK_BITS (UPLINK_BLOCK_DATA_BITS+160)
+#define UPLINK_BLOCK_DATA_BYTES (UPLINK_BLOCK_DATA_BITS/8)
+#define UPLINK_BLOCK_BYTES (UPLINK_BLOCK_BITS/8)
+
+#define UPLINK_FRAME_BLOCKS (6)
+#define UPLINK_FRAME_DATA_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_DATA_BITS)
+#define UPLINK_FRAME_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_BITS)
+#define UPLINK_FRAME_DATA_BYTES (UPLINK_FRAME_DATA_BITS/8)
+#define UPLINK_FRAME_BYTES (UPLINK_FRAME_BITS/8)
 
 static int raw_mode = 0;
 
@@ -69,6 +97,22 @@ static void dump_raw_message(char updown, uint8_t *data, int len, int rs_errors)
     fprintf(stdout, ";\n");
 }
 
+static void handle_adsb_frame(uint64_t timestamp, uint8_t *frame, int rs)
+{
+    dump_raw_message('-', frame, (frame[0]>>3) == 0 ? SHORT_FRAME_DATA_BYTES : LONG_FRAME_DATA_BYTES, rs);
+    if (!raw_mode) {
+        struct uat_adsb_mdb mdb;
+        uat_decode_adsb_mdb(frame, &mdb);
+        uat_display_adsb_mdb(&mdb, stdout);
+    }
+    fflush(stdout);
+}
+
+static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs)
+{
+    dump_raw_message('+', frame, UPLINK_FRAME_DATA_BYTES, rs);
+    fflush(stdout);
+}
 
 uint16_t iqphase[65536]; // contains value [0..65536) -> [0, 2*pi)
 
@@ -93,34 +137,6 @@ void make_atan2_table()
         }
     }
 }
-
-
-// 36 bit sync word
-#define ADSB_SYNC_WORD   0xEACDDA4E2UL
-#define UPLINK_SYNC_WORD 0x153225B1DUL
-
-#define SYNC_BITS (36)
-
-#define SHORT_FRAME_DATA_BITS (144)
-#define SHORT_FRAME_BITS (SHORT_FRAME_DATA_BITS+96)
-#define SHORT_FRAME_DATA_BYTES (SHORT_FRAME_DATA_BITS/8)
-#define SHORT_FRAME_BYTES (SHORT_FRAME_BITS/8)
-
-#define LONG_FRAME_DATA_BITS (272)
-#define LONG_FRAME_BITS (LONG_FRAME_DATA_BITS+112)
-#define LONG_FRAME_DATA_BYTES (LONG_FRAME_DATA_BITS/8)
-#define LONG_FRAME_BYTES (LONG_FRAME_BITS/8)
-
-#define UPLINK_BLOCK_DATA_BITS (576)
-#define UPLINK_BLOCK_BITS (UPLINK_BLOCK_DATA_BITS+160)
-#define UPLINK_BLOCK_DATA_BYTES (UPLINK_BLOCK_DATA_BITS/8)
-#define UPLINK_BLOCK_BYTES (UPLINK_BLOCK_BITS/8)
-
-#define UPLINK_FRAME_BLOCKS (6)
-#define UPLINK_FRAME_DATA_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_DATA_BITS)
-#define UPLINK_FRAME_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_BITS)
-#define UPLINK_FRAME_DATA_BYTES (UPLINK_FRAME_DATA_BITS/8)
-#define UPLINK_FRAME_BYTES (UPLINK_FRAME_BITS/8)
 
 static void convert_to_phi(uint16_t *buffer, int n)
 {
@@ -213,6 +229,9 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
     int lenbits;
     int bit;
 
+    uint8_t demod_buf_a[UPLINK_FRAME_BYTES];
+    uint8_t demod_buf_b[UPLINK_FRAME_BYTES];
+
     // We expect samples at twice the UAT bitrate.
     // We look at phase difference between pairs of adjacent samples, i.e.
     //  sample 1 - sample 0   -> sync0
@@ -259,36 +278,58 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
         // so we can tolerate some errors, but that turns out
         // to be very expensive to do on every sample
 
-        if ((sync0 & CHECK_MASK) == CHECK_ADSB) {
-            int startbit = bit-CHECK_BITS+1;
-            int skip = decode_adsb_frame(offset+startbit*2, phi+startbit*2);
-            if (skip) {
-                bit = startbit + skip;
+        // when we find a match, try to demodulate both with that match
+        // and with the next position, and pick the one with fewer
+        // errors.
+
+        // check for downlink frames:
+
+        if ((sync0 & CHECK_MASK) == CHECK_ADSB || (sync1 & CHECK_MASK) == CHECK_ADSB) {
+            int startbit = (bit-CHECK_BITS+1);
+            int shift = ((sync0 & CHECK_MASK) == CHECK_ADSB) ? 0 : 1;
+            int index = startbit*2+shift;
+
+            int skip_0, skip_1;
+            int rs_0 = -1, rs_1 = -1;
+
+            skip_0 = demod_adsb_frame(phi+index, demod_buf_a, &rs_0);
+            skip_1 = demod_adsb_frame(phi+index+1, demod_buf_b, &rs_1);
+            if (skip_0 && rs_0 <= rs_1) {
+                handle_adsb_frame(offset+index, demod_buf_a, rs_0);
+                bit = startbit + skip_0;
                 continue;
-            }                
-        } else if ((sync0 & CHECK_MASK) == CHECK_UPLINK) {
-            int startbit = bit-CHECK_BITS+1;
-            int skip = decode_uplink_frame(offset+startbit*2, phi+startbit*2);
-            if (skip) {
-                bit = startbit + skip;
+            } else if (skip_1 && rs_1 <= rs_0) {
+                handle_adsb_frame(offset+index+1, demod_buf_b, rs_1);
+                bit = startbit + skip_1;
                 continue;
+            } else {
+                // demod failed
             }
         }
 
-        if ((sync1 & CHECK_MASK) == CHECK_ADSB) {
-            int startbit = bit-CHECK_BITS+1;
-            int skip = decode_adsb_frame(offset+startbit*2+1, phi+startbit*2+1);
-            if (skip) {
-                bit = startbit + skip;
+        // check for uplink frames:
+
+        else if ((sync0 & CHECK_MASK) == CHECK_UPLINK || (sync1 & CHECK_MASK) == CHECK_UPLINK) {
+            int startbit = (bit-CHECK_BITS+1);
+            int shift = ((sync0 & CHECK_MASK) == CHECK_UPLINK) ? 0 : 1;
+            int index = startbit*2+shift;
+
+            int skip_0, skip_1;
+            int rs_0 = -1, rs_1 = -1;
+
+            skip_0 = demod_uplink_frame(phi+index, demod_buf_a, &rs_0);
+            skip_1 = demod_uplink_frame(phi+index+1, demod_buf_b, &rs_1);
+            if (skip_0 && rs_0 <= rs_1) {
+                handle_uplink_frame(offset+index, demod_buf_a, rs_0);
+                bit = startbit + skip_0;
                 continue;
+            } else if (skip_1 && rs_1 <= rs_0) {
+                handle_uplink_frame(offset+index+1, demod_buf_b, rs_1);
+                bit = startbit + skip_1;
+                continue;
+            } else {
+                // demod failed
             }
-        } else if ((sync1 & CHECK_MASK) == CHECK_UPLINK) {
-            int startbit = bit-CHECK_BITS+1;
-            int skip = decode_uplink_frame(offset+startbit*2+1, phi+startbit*2+1);
-            if (skip) {
-                bit = startbit + skip;
-                continue;
-            }                
         }
     }
 
@@ -314,219 +355,87 @@ static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center
     }
 }
 
-void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
+// Demodulate an ADSB (Long UAT or Basic UAT) downlink frame
+// with the first sync bit in 'phi', storing the frame into 'to'
+// of length up to LONG_FRAME_BYTES. Set '*rs_errors' to the
+// number of corrected errors, or 9999 if demodulation failed.
+// Return 0 if demodulation failed, or the number of bits (not
+// samples) consumed if demodulation was OK.
+static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 {
-    if (lat <= 0x400000) {
-        // 1st quadrant
-        *wgs_lat = lat * 360.0 / 16777216.0;
-    } else {
-        // 4th quadrant
-        *wgs_lat = -90 + (lat & 0x3fffff) * 360.0 / 16777216.0;
-    }
-    
-    *wgs_lng = lng * 360.0 / 16777216.0;
-    if (*wgs_lng > 180.0)
-        *wgs_lng -= 360.0;        
-} 
-
-int decode_adsb_frame(uint64_t timestamp, uint16_t *phi)
-{
-    uint8_t framedata[LONG_FRAME_BYTES];
-    uint8_t short_framedata[SHORT_FRAME_BYTES];
     int16_t center_dphi;
-    struct uat_adsb_mdb mdb;
     int n_corrected;
 
-    if (!check_sync_word(phi, ADSB_SYNC_WORD, &center_dphi))
+    if (!check_sync_word(phi, ADSB_SYNC_WORD, &center_dphi)) {
+        *rs_errors = 9999;
         return 0;
+    }
 
-    demod_frame(phi + SYNC_BITS*2, framedata, LONG_FRAME_BYTES, center_dphi);
+    demod_frame(phi + SYNC_BITS*2, to, LONG_FRAME_BYTES, center_dphi);
 
-    // Try decoding as a Long UAT. Copy the data first in case we have to fall back
-    // to Basic UAT.
-    memcpy(short_framedata, framedata, SHORT_FRAME_BYTES);
-    n_corrected = decode_rs_char(rs_adsb_long, framedata, NULL, 0);
-    if (n_corrected >= 0 && n_corrected <= 7 && (framedata[0]>>3) != 0) {
-        dump_raw_message('-', framedata, LONG_FRAME_DATA_BYTES, n_corrected);
-        if (!raw_mode) {
-            uat_decode_adsb_mdb(framedata, &mdb);
-            
-            fprintf(stdout,
-                    "%.6f   Long UAT MDB received\n"
-                    "=============================================\n",
-                    timestamp / 2083334.0);
-            uat_display_adsb_mdb(&mdb, stdout);
-            fprintf(stdout, "=============================================\n\n");
-        }
-
-        fflush(stdout);
+    // Try decoding as a Long UAT.
+    // We rely on decode_rs_char not modifying the data if there were
+    // uncorrectable errors.
+    n_corrected = decode_rs_char(rs_adsb_long, to, NULL, 0);
+    if (n_corrected >= 0 && n_corrected <= 7 && (to[0]>>3) != 0) {
+        // Valid long frame.
+        *rs_errors = n_corrected;
         return (SYNC_BITS+LONG_FRAME_BITS);
     }
 
     // Retry as Basic UAT
-    n_corrected = decode_rs_char(rs_adsb_short, short_framedata, NULL, 0);
-    if (n_corrected >= 0 && n_corrected <= 6 && (short_framedata[0]>>3) == 0) {
-        dump_raw_message('-', short_framedata, SHORT_FRAME_DATA_BYTES, n_corrected);
-        if (!raw_mode) {
-            uat_decode_adsb_mdb(short_framedata, &mdb);
-            
-            fprintf(stdout,
-                    "%.6f   Basic UAT MDB received\n"
-                    "=============================================\n",
-                    timestamp / 2083334.0);
-            uat_display_adsb_mdb(&mdb, stdout);
-            fprintf(stdout, "=============================================\n\n");
-        }
-
-        fflush(stdout);
+    n_corrected = decode_rs_char(rs_adsb_short, to, NULL, 0);
+    if (n_corrected >= 0 && n_corrected <= 6 && (to[0]>>3) == 0) {
+        // Valid short frame
+        *rs_errors = n_corrected;
         return (SYNC_BITS+SHORT_FRAME_BITS);
     }
 
-    // Nope.
+    // Failed.
+    *rs_errors = 9999;
     return 0;
 }
 
-void decode_fisb_apdu(uint8_t *pdu, int length)
+// Demodulate an uplink frame
+// with the first sync bit in 'phi', storing the frame into 'to'
+// of length up to UPLINK_FRAME_BYTES. Set '*rs_errors' to the
+// number of corrected errors, or 9999 if demodulation failed.
+// Return 0 if demodulation failed, or the number of bits (not
+// samples) consumed if demodulation was OK.
+static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 {
-    // I don't have a spec for this :(
-    // Mostly cargo-culted from inspection of the lone-star-adsb decoder
-
-    int id = ((pdu[0] & 0x1f) << 6) | ((pdu[1] & 0xfc) >> 2);
-    fprintf(stdout,
-            "     === FIS-B APDU ===\n"
-            "      Product:\n"
-            "       A:%d G:%d P:%d S:%d T:%d ID:%d\n"
-            "       Hour: %d Min: %d\n",
-            (pdu[0] & 0x80) ? 1 : 0,
-            (pdu[0] & 0x40) ? 1 : 0,
-            (pdu[0] & 0x20) ? 1 : 0,
-            (pdu[1] & 0x02) ? 1 : 0,
-            ((pdu[1] & 0x01) << 1) | ((pdu[2] & 0x80) >> 7),
-            id,
-
-            (pdu[2] & 0x7c) >> 2,
-            ((pdu[2] & 0x03) << 4) | ((pdu[3] & 0xf0) >> 4));
-
-    // TODO
-}
-
-void decode_uplink_app_data(uint8_t *blockdata)
-{
-    int i = 8;
-    while (i < 422) {
-        int length = (blockdata[i] << 1) | (blockdata[i+1] >> 7);
-        int type = (blockdata[i+1] & 7);
-        if (length == 0) {
-            fprintf(stdout, 
-                    "    (%d bytes trailing)\n",
-                    422 - i);
-            break; // no more data
-        }
-
-        fprintf(stdout,
-                "   === INFORMATION FRAME ===\n"
-                "    Start offset:      %d\n"
-                "    Length:            %d\n"
-                "    Type:              %d\n",
-                i, length, type);
-
-        if (i + 2 + length > 422) {
-            fprintf(stdout, "    (length exceeds available data, halting decode)\n");
-            break;
-        } else {
-            int j;
-
-            fprintf(stdout, "    Data:              ");
-            for (j = 0; j < length; ++j)
-                fprintf(stdout, "%02x", blockdata[i + 2 + j]);
-            fprintf(stdout, "\n");
-
-            if (type == 0) {
-                // FIS-B APDU
-                decode_fisb_apdu(blockdata + i + 2, length);
-            }
-        }
-
-        i = i + length + 2;
-    }
-}
-
-void decode_uplink_mdb(uint8_t *blockdata)
-{
-    fprintf(stdout, 
-            "   === UPLINK MDB ===\n");
-
-    if (blockdata[5] & 1) {
-        // position valid
-        int lat = (blockdata[0] << 15) | (blockdata[1] << 7) | (blockdata[2] >> 1);
-        int lng = ((blockdata[2] & 1) << 23) | (blockdata[3] << 15) | (blockdata[4] << 7) | (blockdata[5] >> 1);
-        double wgs_lat = 0, wgs_lng = 0;
-
-        decode_latlng(lat, lng, &wgs_lat, &wgs_lng);
-        fprintf(stdout,
-                "    GS Latitude:       %+3.3f (%d)\n"
-                "    GS Longitude:      %+3.3f (%d)\n",
-                wgs_lat, lat,
-                wgs_lng, lng);
-    }
-
-    fprintf(stdout,
-            "    UTC coupled:       %s\n"
-            "    App data valid:    %s\n"
-            "    Slot ID:           %d\n"
-            "    TIS-B Site ID:     %d\n",
-            (blockdata[6] & 0x80) ? "yes" : "no",
-            (blockdata[6] & 0x20) ? "yes" : "no",
-            (blockdata[6] & 0x1f),
-            (blockdata[7] >> 4));
-
-    if (blockdata[6] & 0x20)
-        decode_uplink_app_data(blockdata);
-}   
-
-int decode_uplink_frame(uint64_t timestamp, uint16_t *phi)
-{
-    int i, block;
-    uint8_t interleaved[UPLINK_FRAME_BYTES];
+    int block;
     int16_t center_dphi;
-    uint8_t deinterleaved[UPLINK_FRAME_DATA_BYTES];
+    uint8_t interleaved[UPLINK_FRAME_BYTES];
     int total_corrected = 0;
 
-    if (!check_sync_word(phi, UPLINK_SYNC_WORD, &center_dphi))
+    if (!check_sync_word(phi, UPLINK_SYNC_WORD, &center_dphi)) {
+        *rs_errors = 9999;
         return 0;
+    }
 
     demod_frame(phi + SYNC_BITS*2, interleaved, UPLINK_FRAME_BYTES, center_dphi);
-
-    // deinterleave blocks
+    
+    // deinterleave a block at a time directly into the target buffer
+    // (we have enough space for the trailing ECC as the caller provides UPLINK_FRAME_BYTES)
     for (block = 0; block < UPLINK_FRAME_BLOCKS; ++block) {
-        uint8_t blockdata[UPLINK_BLOCK_BYTES];
-        int n_corrected;
-        
+        int i, n_corrected;
+        uint8_t *blockdata = &to[block * UPLINK_BLOCK_DATA_BYTES];
+
         for (i = 0; i < UPLINK_BLOCK_BYTES; ++i)
             blockdata[i] = interleaved[i * UPLINK_FRAME_BLOCKS + block];
 
+        // error-correct in place
         n_corrected = decode_rs_char(rs_uplink, blockdata, NULL, 0);
         if (n_corrected < 0 || n_corrected > 10) {
+            *rs_errors = 9999;
             return 0;
         }
 
-        memcpy (deinterleaved + UPLINK_BLOCK_DATA_BYTES*block, blockdata, UPLINK_BLOCK_DATA_BYTES); // drop the trailing ECC part
         total_corrected += n_corrected;
+        // next block (if there is one) will overwrite the ECC bytes.
     }
 
-    dump_raw_message('+', deinterleaved, UPLINK_FRAME_DATA_BYTES, total_corrected);
-    if (!raw_mode) {
-        fprintf(stdout,
-                "%.6f   Uplink MDB received\n"
-                "=============================================\n",
-                timestamp / 2083334.0 / 2);
-        //decode_uplink_mdb(deinterleaved);
-        fprintf(stdout, "=============================================\n\n");
-    }
-
-    fflush(stdout);
+    *rs_errors = total_corrected;
     return (UPLINK_FRAME_BITS+SYNC_BITS);
 }
-
-
-
