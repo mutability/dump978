@@ -69,6 +69,23 @@ static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs);
 
 static int raw_mode = 0;
 
+// relying on signed overflow is theoretically bad. Let's do it properly.
+
+#ifdef USE_SIGNED_OVERFLOW
+#define phi_difference(from,to) ((int16_t)((to) - (from)))
+#else
+inline int16_t phi_difference(uint16_t from, uint16_t to)
+{
+    int32_t difference = to - from; // lies in the range -65535 .. +65535
+    if (difference >= 32768)        //   +32768..+65535
+        return difference - 65536;  //   -> -32768..-1: always in range
+    else if (difference < -32768)   //   -65535..-32769
+        return difference + 65536;  //   -> +1..32767: always in range
+    else
+        return difference;
+}
+#endif
+
 int main(int argc, char **argv)
 {
     if (argc > 1 && !strcmp(argv[1], "-raw"))
@@ -188,7 +205,7 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
     // take the mean of the two as our central value
 
     for (i = 0; i < 36; ++i) {
-        int16_t dphi = phi[i*2+1] - phi[i*2];
+        int16_t dphi = phi_difference(phi[i*2], phi[i*2+1]);
 
         if (pattern & (1UL << (35-i))) {
             ++one_bits;
@@ -207,7 +224,7 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
     // recheck sync word using our center value
     error_bits = 0;
     for (i = 0; i < 36; ++i) {
-        int16_t dphi = phi[i*2+1] - phi[i*2];
+        int16_t dphi = phi_difference(phi[i*2], phi[i*2+1]);
 
         if (pattern & (1UL << (35-i))) {
             if (dphi < *center)
@@ -264,8 +281,8 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
 
     lenbits = len/2 - ((SYNC_BITS-CHECK_BITS) + UPLINK_FRAME_BITS);
     for (bit = 0; bit < lenbits; ++bit) {
-        int16_t dphi0 = phi[bit*2+1] - phi[bit*2];
-        int16_t dphi1 = phi[bit*2+2] - phi[bit*2+1];
+        int16_t dphi0 = phi_difference(phi[bit*2], phi[bit*2+1]);
+        int16_t dphi1 = phi_difference(phi[bit*2+1], phi[bit*2+2]);
 
         sync0 = ((sync0 << 1) | (dphi0 > 0 ? 1 : 0));
         sync1 = ((sync1 << 1) | (dphi1 > 0 ? 1 : 0));
@@ -342,14 +359,14 @@ static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center
 {
     while (--bytes >= 0) {
         uint8_t b = 0;
-        if ((int16_t)(phi[1] - phi[0]) > center_dphi) b |= 0x80;
-        if ((int16_t)(phi[3] - phi[2]) > center_dphi) b |= 0x40;
-        if ((int16_t)(phi[5] - phi[4]) > center_dphi) b |= 0x20;
-        if ((int16_t)(phi[7] - phi[6]) > center_dphi) b |= 0x10;
-        if ((int16_t)(phi[9] - phi[8]) > center_dphi) b |= 0x08;
-        if ((int16_t)(phi[11] - phi[10]) > center_dphi) b |= 0x04;
-        if ((int16_t)(phi[13] - phi[12]) > center_dphi) b |= 0x02;
-        if ((int16_t)(phi[15] - phi[14]) > center_dphi) b |= 0x01;
+        if (phi_difference(phi[0], phi[1]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[2], phi[3]) > center_dphi) b |= 0x40;
+        if (phi_difference(phi[4], phi[5]) > center_dphi) b |= 0x20;
+        if (phi_difference(phi[6], phi[7]) > center_dphi) b |= 0x10;
+        if (phi_difference(phi[8], phi[9]) > center_dphi) b |= 0x08;
+        if (phi_difference(phi[10], phi[11]) > center_dphi) b |= 0x04;
+        if (phi_difference(phi[12], phi[13]) > center_dphi) b |= 0x02;
+        if (phi_difference(phi[14], phi[15]) > center_dphi) b |= 0x01;
         *frame++ = b;
         phi += 16;
     }
