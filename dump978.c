@@ -98,7 +98,6 @@ void make_atan2_table()
 // 36 bit sync word
 #define ADSB_SYNC_WORD   0xEACDDA4E2UL
 #define UPLINK_SYNC_WORD 0x153225B1DUL
-#define SYNC_MASK 0xFFFFFFFFFUL
 
 #define SYNC_BITS (36)
 
@@ -148,20 +147,29 @@ void read_from_stdin()
         used -= processed * 2;
         offset += processed;
         if (used > 0) {
-            //fprintf(stderr, "move: %d+%d -> 0+%d\n", processed*2, used, used);
             memmove(buffer, buffer+processed*2, used);
         }
     }
 }
 
-int find_average_dphi(uint16_t *phi, uint64_t pattern, int16_t *center, int32_t *separation)
+// maximum number of bit errors to permit in the sync word
+#define MAX_SYNC_ERRORS 2
+
+// check that there is a valid sync word starting at 'phi'
+// that matches the sync word 'pattern'. Place the dphi
+// threshold to use for bit slicing in '*center'. Return 1
+// if the sync word is OK, 0 on failure
+int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
 {
     int i;
-
     int32_t dphi_zero_total = 0;
     int zero_bits = 0;
     int32_t dphi_one_total = 0;
     int one_bits = 0;
+    int error_bits;
+
+    // find mean dphi for zero and one bits;
+    // take the mean of the two as our central value
 
     for (i = 0; i < 36; ++i) {
         int16_t dphi = phi[i*2+1] - phi[i*2];
@@ -178,29 +186,32 @@ int find_average_dphi(uint16_t *phi, uint64_t pattern, int16_t *center, int32_t 
     dphi_zero_total /= zero_bits;
     dphi_one_total /= one_bits;
 
-    *separation = dphi_one_total - dphi_zero_total;
-    *center = (dphi_zero_total + dphi_one_total) / 2;
+    *center = (dphi_one_total + dphi_zero_total) / 2;
 
-#if 0    
-    fprintf(stdout, "zeroes %.0fkHz ones %.0fkHz separation %.0fkHz center %.0fkHz\n",
-            dphi_zero_total * 2083334.0 / 65536 / 1000,
-            dphi_one_total * 2083334.0 / 65536 / 1000,
-            *separation * 2083334.0 / 65536 / 1000,
-            *center * 2083334.0 / 65536 / 1000);
-#endif
+    // recheck sync word using our center value
+    error_bits = 0;
+    for (i = 0; i < 36; ++i) {
+        int16_t dphi = phi[i*2+1] - phi[i*2];
 
-    // sanity check - 20kHz to 1MHz separation
-    if (*separation < (65536 * (20e3 / 2083334.0)) || *separation > (65536 * (1000e3 / 2083334.0)))
-        return 0;
-    else
-        return 1;
+        if (pattern & (1UL << (35-i))) {
+            if (dphi < *center)
+                ++error_bits;
+        } else {
+            if (dphi >= *center)
+                ++error_bits;
+        }
+    }
+
+    //fprintf(stdout, "check_sync_word: center=%.0fkHz, errors=%d\n", *center * 2083334.0 / 65536 / 1000, error_bits);
+
+    return (error_bits <= MAX_SYNC_ERRORS);
 }
 
-int process_buffer(uint16_t *phi, int len, uint64_t offset)
+int process_buffer(uint16_t *phi, int len, uint64_t offset)    
 {
-    uint16_t last_phi = phi[0];
     uint64_t sync0 = 0, sync1 = 0;
-    int i;    
+    int lenbits;
+    int bit;
 
     // We expect samples at twice the UAT bitrate.
     // We look at phase difference between pairs of adjacent samples, i.e.
@@ -215,56 +226,92 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
     // should be at the start of each UAT frame. When (if) we find it,
     // that tells us which sample to start decoding from.
 
-    // Stop when we run out of samples for a full sync word plus max-sized frame;
-    // our caller will pass the remaining data back to us as the
-    // start of the buffer next time. This means we don't need to maintain
-    // state between calls.
-    for (i = 2; i+(UPLINK_FRAME_BITS+1)*2 < len; i += 2) {
-        uint16_t phi0 = phi[i+0];
-        uint16_t phi1 = phi[i+1];
-        int16_t dphi0 = phi0 - last_phi;  // don't need to worry about wrapping at +/-pi, the width of the datatype does it for us
-        int16_t dphi1 = phi1 - phi0;
+    // Stop when we run out of remaining samples for a max-sized frame.
+    // Arrange for our caller to pass the trailing data back to us next time;
+    // ensure we don't consume any partial sync word we might be part-way
+    // through. This means we don't need to maintain state between calls.
 
-        last_phi = phi1;
+    // We actually only look for the first CHECK_BITS of the sync word here.
+    // If there's a match, the frame demodulators will derive a center offset
+    // from the full word and then use that to re-check the sync word. This
+    // lets us grab a few more marginal frames.
 
-        // accumulate sync words
-        sync0 = ((sync0 << 1) | (dphi0 < 0 ? 0 : 1));
-        sync1 = ((sync1 << 1) | (dphi1 < 0 ? 0 : 1));
+    // 18 seems like a good tradeoff between recovering more frames
+    // and excessive false positives
+#define CHECK_BITS 18
+#define CHECK_MASK ((1UL<<CHECK_BITS)-1)
+#define CHECK_ADSB (ADSB_SYNC_WORD >> (SYNC_BITS-CHECK_BITS))
+#define CHECK_UPLINK (UPLINK_SYNC_WORD >> (SYNC_BITS-CHECK_BITS))
 
-        //fprintf(stdout, "%09lx %09lx\n", sync0 & SYNC_MASK, sync1 & SYNC_MASK);
+    lenbits = len/2 - ((SYNC_BITS-CHECK_BITS) + UPLINK_FRAME_BITS);
+    for (bit = 0; bit < lenbits; ++bit) {
+        int16_t dphi0 = phi[bit*2+1] - phi[bit*2];
+        int16_t dphi1 = phi[bit*2+2] - phi[bit*2+1];
 
+        sync0 = ((sync0 << 1) | (dphi0 > 0 ? 1 : 0));
+        sync1 = ((sync1 << 1) | (dphi1 > 0 ? 1 : 0));
 
-        // see if we have a valid sync word
-        if ((sync0 & SYNC_MASK) == ADSB_SYNC_WORD) {
-            int skip = decode_adsb_frame(offset+i+1, phi+i+1);
+        if (bit < CHECK_BITS)
+            continue; // haven't fully populated sync0/1 yet
+
+        // see if we have (the start of) a valid sync word
+        // It would be nice to look at popcount(expected ^ sync) 
+        // so we can tolerate some errors, but that turns out
+        // to be very expensive to do on every sample
+
+        if ((sync0 & CHECK_MASK) == CHECK_ADSB) {
+            int startbit = bit-CHECK_BITS+1;
+            int skip = decode_adsb_frame(offset+startbit*2, phi+startbit*2);
             if (skip) {
-                i = i + 1 + skip - 2;
+                bit = startbit + skip;
                 continue;
             }                
-        } else if ((sync0 & SYNC_MASK) == UPLINK_SYNC_WORD) {
-            int skip = decode_uplink_frame(offset+i+1, phi+i+1);
+        } else if ((sync0 & CHECK_MASK) == CHECK_UPLINK) {
+            int startbit = bit-CHECK_BITS+1;
+            int skip = decode_uplink_frame(offset+startbit*2, phi+startbit*2);
             if (skip) {
-                i = i + 1 + skip - 2;
+                bit = startbit + skip;
                 continue;
             }
         }
 
-        if ((sync1 & SYNC_MASK) == ADSB_SYNC_WORD) {
-            int skip = decode_adsb_frame(offset+i+2, phi+i+2);
+        if ((sync1 & CHECK_MASK) == CHECK_ADSB) {
+            int startbit = bit-CHECK_BITS+1;
+            int skip = decode_adsb_frame(offset+startbit*2+1, phi+startbit*2+1);
             if (skip) {
-                i = i + 2 + skip - 2;
+                bit = startbit + skip;
                 continue;
-            }                
-        } else if ((sync1 & SYNC_MASK) == UPLINK_SYNC_WORD) {
-            int skip = decode_uplink_frame(offset+i+2, phi+i+2);
+            }
+        } else if ((sync1 & CHECK_MASK) == CHECK_UPLINK) {
+            int startbit = bit-CHECK_BITS+1;
+            int skip = decode_uplink_frame(offset+startbit*2+1, phi+startbit*2+1);
             if (skip) {
-                i = i + 2 + skip - 2;
+                bit = startbit + skip;
                 continue;
             }                
         }
     }
 
-    return i - (SYNC_BITS-1)*2;
+    return (bit - CHECK_BITS)*2;
+}
+
+// demodulate 'bytes' bytes from samples at 'phi' into 'frame',
+// using 'center_dphi' as the bit slicing threshold
+static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center_dphi)
+{
+    while (--bytes >= 0) {
+        uint8_t b = 0;
+        if ((int16_t)(phi[1] - phi[0]) > center_dphi) b |= 0x80;
+        if ((int16_t)(phi[3] - phi[2]) > center_dphi) b |= 0x40;
+        if ((int16_t)(phi[5] - phi[4]) > center_dphi) b |= 0x20;
+        if ((int16_t)(phi[7] - phi[6]) > center_dphi) b |= 0x10;
+        if ((int16_t)(phi[9] - phi[8]) > center_dphi) b |= 0x08;
+        if ((int16_t)(phi[11] - phi[10]) > center_dphi) b |= 0x04;
+        if ((int16_t)(phi[13] - phi[12]) > center_dphi) b |= 0x02;
+        if ((int16_t)(phi[15] - phi[14]) > center_dphi) b |= 0x01;
+        *frame++ = b;
+        phi += 16;
+    }
 }
 
 void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
@@ -284,26 +331,16 @@ void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
 
 int decode_adsb_frame(uint64_t timestamp, uint16_t *phi)
 {
-    int i;
     uint8_t framedata[LONG_FRAME_BYTES];
     uint8_t short_framedata[SHORT_FRAME_BYTES];
-    int16_t average_dphi;
-    int32_t separation;
+    int16_t center_dphi;
     struct uat_adsb_mdb mdb;
     int n_corrected;
 
-    if (!find_average_dphi(phi-36*2, ADSB_SYNC_WORD, &average_dphi, &separation)) {
+    if (!check_sync_word(phi, ADSB_SYNC_WORD, &center_dphi))
         return 0;
-    }
 
-    memset(framedata, 0, sizeof(framedata));
-
-    for (i = 0; i < LONG_FRAME_BITS; ++i) {
-        int16_t dphi = phi[i*2+1] - phi[i*2];
-        
-        if (dphi > average_dphi)
-            framedata[i/8] |= (1 << (7 - (i&7)));
-    }
+    demod_frame(phi + SYNC_BITS*2, framedata, LONG_FRAME_BYTES, center_dphi);
 
     // Try decoding as a Long UAT. Copy the data first in case we have to fall back
     // to Basic UAT.
@@ -317,13 +354,13 @@ int decode_adsb_frame(uint64_t timestamp, uint16_t *phi)
             fprintf(stdout,
                     "%.6f   Long UAT MDB received\n"
                     "=============================================\n",
-                    timestamp / 2083334.0 / 2);
+                    timestamp / 2083334.0);
             uat_display_adsb_mdb(&mdb, stdout);
             fprintf(stdout, "=============================================\n\n");
         }
 
         fflush(stdout);
-        return LONG_FRAME_BITS*2;
+        return (SYNC_BITS+LONG_FRAME_BITS);
     }
 
     // Retry as Basic UAT
@@ -336,13 +373,13 @@ int decode_adsb_frame(uint64_t timestamp, uint16_t *phi)
             fprintf(stdout,
                     "%.6f   Basic UAT MDB received\n"
                     "=============================================\n",
-                    timestamp / 2083334.0 / 2);
+                    timestamp / 2083334.0);
             uat_display_adsb_mdb(&mdb, stdout);
             fprintf(stdout, "=============================================\n\n");
         }
 
         fflush(stdout);
-        return SHORT_FRAME_BITS*2;
+        return (SYNC_BITS+SHORT_FRAME_BITS);
     }
 
     // Nope.
@@ -451,23 +488,14 @@ int decode_uplink_frame(uint64_t timestamp, uint16_t *phi)
 {
     int i, block;
     uint8_t interleaved[UPLINK_FRAME_BYTES];
-    int16_t average_dphi;
-    int32_t separation;
+    int16_t center_dphi;
     uint8_t deinterleaved[UPLINK_FRAME_DATA_BYTES];
     int total_corrected = 0;
 
-    if (!find_average_dphi(phi-36*2, UPLINK_SYNC_WORD, &average_dphi, &separation)) {
+    if (!check_sync_word(phi, UPLINK_SYNC_WORD, &center_dphi))
         return 0;
-    }
 
-    memset(interleaved, 0, sizeof(interleaved));
-
-    for (i = 0; i < UPLINK_FRAME_BITS; ++i) {
-        int16_t dphi = phi[i*2+1] - phi[i*2+0];
-        
-        if (dphi > average_dphi)
-            interleaved[i/8] |= (1 << (7 - (i&7)));
-    }
+    demod_frame(phi + SYNC_BITS*2, interleaved, UPLINK_FRAME_BYTES, center_dphi);
 
     // deinterleave blocks
     for (block = 0; block < UPLINK_FRAME_BLOCKS; ++block) {
@@ -497,7 +525,7 @@ int decode_uplink_frame(uint64_t timestamp, uint16_t *phi)
     }
 
     fflush(stdout);
-    return UPLINK_FRAME_BITS*2;
+    return (UPLINK_FRAME_BITS+SYNC_BITS);
 }
 
 
