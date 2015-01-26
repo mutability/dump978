@@ -32,10 +32,10 @@ void *rs_adsb_long;
 
 static void make_atan2_table();
 static void read_from_stdin();
-static int process_buffer(uint16_t *phi, int len, uint64_t offset);
-static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
-static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
-static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center_dphi);
+static unsigned process_buffer(uint16_t *phi, unsigned len, uint64_t offset);
+static unsigned demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
+static unsigned demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
+static void demod_frame(uint16_t *phi, uint8_t *frame, unsigned len, int16_t center_dphi);
 static void handle_adsb_frame(uint64_t timestamp, uint8_t *frame, int rs);
 static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs);
 
@@ -69,6 +69,23 @@ static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs);
 
 static int raw_mode = 0;
 
+// relying on signed overflow is theoretically bad. Let's do it properly.
+
+#ifdef USE_SIGNED_OVERFLOW
+#define phi_difference(from,to) ((int16_t)((to) - (from)))
+#else
+inline int16_t phi_difference(uint16_t from, uint16_t to)
+{
+    int32_t difference = to - from; // lies in the range -65535 .. +65535
+    if (difference >= 32768)        //   +32768..+65535
+        return difference - 65536;  //   -> -32768..-1: always in range
+    else if (difference < -32768)   //   -65535..-32769
+        return difference + 65536;  //   -> +1..32767: always in range
+    else
+        return difference;
+}
+#endif
+
 int main(int argc, char **argv)
 {
     if (argc > 1 && !strcmp(argv[1], "-raw"))
@@ -83,9 +100,9 @@ int main(int argc, char **argv)
     return 0;
 }
 
-static void dump_raw_message(char updown, uint8_t *data, int len, int rs_errors)
+static void dump_raw_message(char updown, uint8_t *data, unsigned len, int rs_errors)
 {
-    int i;
+    unsigned i;
 
     fprintf(stdout, "%c", updown);
     for (i = 0; i < len; ++i) {
@@ -138,10 +155,9 @@ void make_atan2_table()
     }
 }
 
-static void convert_to_phi(uint16_t *buffer, int n)
+static void convert_to_phi(uint16_t *buffer, unsigned n)
 {
-    int i;
-
+    unsigned i;
     for (i = 0; i < n; ++i)
         buffer[i] = iqphase[buffer[i]];
 }
@@ -149,12 +165,12 @@ static void convert_to_phi(uint16_t *buffer, int n)
 void read_from_stdin()
 {
     char buffer[65536*2];
-    int n;
-    int used = 0;
-    uint64_t offset = 0;
+    ssize_t n;
+    unsigned used = 0;
+    unsigned offset = 0;
     
     while ( (n = read(0, buffer+used, sizeof(buffer)-used)) > 0 ) {
-        int processed;
+        unsigned processed;
 
         convert_to_phi((uint16_t*) (buffer+(used&~1)), ((used&1)+n)/2);
 
@@ -177,18 +193,18 @@ void read_from_stdin()
 // if the sync word is OK, 0 on failure
 int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
 {
-    int i;
+    unsigned i;
     int32_t dphi_zero_total = 0;
-    int zero_bits = 0;
+    unsigned zero_bits = 0;
     int32_t dphi_one_total = 0;
-    int one_bits = 0;
-    int error_bits;
+    unsigned one_bits = 0;
+    unsigned error_bits;
 
     // find mean dphi for zero and one bits;
     // take the mean of the two as our central value
 
     for (i = 0; i < 36; ++i) {
-        int16_t dphi = phi[i*2+1] - phi[i*2];
+        int16_t dphi = phi_difference(phi[i*2], phi[i*2+1]);
 
         if (pattern & (1UL << (35-i))) {
             ++one_bits;
@@ -207,7 +223,7 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
     // recheck sync word using our center value
     error_bits = 0;
     for (i = 0; i < 36; ++i) {
-        int16_t dphi = phi[i*2+1] - phi[i*2];
+        int16_t dphi = phi_difference(phi[i*2], phi[i*2+1]);
 
         if (pattern & (1UL << (35-i))) {
             if (dphi < *center)
@@ -223,11 +239,11 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
     return (error_bits <= MAX_SYNC_ERRORS);
 }
 
-int process_buffer(uint16_t *phi, int len, uint64_t offset)    
+unsigned process_buffer(uint16_t *phi, unsigned len, uint64_t offset)
 {
     uint64_t sync0 = 0, sync1 = 0;
-    int lenbits;
-    int bit;
+    unsigned lenbits;
+    unsigned bit;
 
     uint8_t demod_buf_a[UPLINK_FRAME_BYTES];
     uint8_t demod_buf_b[UPLINK_FRAME_BYTES];
@@ -264,8 +280,8 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
 
     lenbits = len/2 - ((SYNC_BITS-CHECK_BITS) + UPLINK_FRAME_BITS);
     for (bit = 0; bit < lenbits; ++bit) {
-        int16_t dphi0 = phi[bit*2+1] - phi[bit*2];
-        int16_t dphi1 = phi[bit*2+2] - phi[bit*2+1];
+        int16_t dphi0 = phi_difference(phi[bit*2], phi[bit*2+1]);
+        int16_t dphi1 = phi_difference(phi[bit*2+1], phi[bit*2+2]);
 
         sync0 = ((sync0 << 1) | (dphi0 > 0 ? 1 : 0));
         sync1 = ((sync1 << 1) | (dphi1 > 0 ? 1 : 0));
@@ -336,20 +352,21 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
     return (bit - CHECK_BITS)*2;
 }
 
-// demodulate 'bytes' bytes from samples at 'phi' into 'frame',
+// demodulate 'len' bytes from samples at 'phi' into 'frame',
 // using 'center_dphi' as the bit slicing threshold
-static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center_dphi)
+static void demod_frame(uint16_t *phi, uint8_t *frame, unsigned len, int16_t center_dphi)
 {
-    while (--bytes >= 0) {
+    unsigned i;
+    for (i = 0; i < len; ++i) {
         uint8_t b = 0;
-        if ((int16_t)(phi[1] - phi[0]) > center_dphi) b |= 0x80;
-        if ((int16_t)(phi[3] - phi[2]) > center_dphi) b |= 0x40;
-        if ((int16_t)(phi[5] - phi[4]) > center_dphi) b |= 0x20;
-        if ((int16_t)(phi[7] - phi[6]) > center_dphi) b |= 0x10;
-        if ((int16_t)(phi[9] - phi[8]) > center_dphi) b |= 0x08;
-        if ((int16_t)(phi[11] - phi[10]) > center_dphi) b |= 0x04;
-        if ((int16_t)(phi[13] - phi[12]) > center_dphi) b |= 0x02;
-        if ((int16_t)(phi[15] - phi[14]) > center_dphi) b |= 0x01;
+        if (phi_difference(phi[0], phi[1]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[2], phi[3]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[4], phi[5]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[6], phi[7]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[8], phi[9]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[10], phi[11]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[12], phi[13]) > center_dphi) b |= 0x80;
+        if (phi_difference(phi[14], phi[15]) > center_dphi) b |= 0x80;
         *frame++ = b;
         phi += 16;
     }
@@ -361,7 +378,7 @@ static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center
 // number of corrected errors, or 9999 if demodulation failed.
 // Return 0 if demodulation failed, or the number of bits (not
 // samples) consumed if demodulation was OK.
-static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
+static unsigned demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 {
     int16_t center_dphi;
     int n_corrected;
@@ -402,7 +419,7 @@ static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 // number of corrected errors, or 9999 if demodulation failed.
 // Return 0 if demodulation failed, or the number of bits (not
 // samples) consumed if demodulation was OK.
-static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
+static unsigned demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 {
     int block;
     int16_t center_dphi;
