@@ -32,9 +32,9 @@ void *rs_adsb_long;
 
 void make_atan2_table();
 void read_from_stdin();
-int process_buffer(uint8_t *input, int len, uint64_t offset);
-int decode_adsb_frame(uint64_t timestamp, uint8_t *input);
-int decode_uplink_frame(uint64_t timestamp, uint8_t *input);
+int process_buffer(uint16_t *phi, int len, uint64_t offset);
+int decode_adsb_frame(uint64_t timestamp, uint16_t *phi);
+int decode_uplink_frame(uint64_t timestamp, uint16_t *phi);
 
 #define UPLINK_POLY 0x187
 #define ADSB_POLY 0x187
@@ -68,11 +68,15 @@ static void dump_raw_message(char updown, uint8_t *data, int len)
 }
 
 
-uint16_t iqphase[256][256]; // contains value [0..65536) -> [0, 2*pi)
+uint16_t iqphase[65536]; // contains value [0..65536) -> [0, 2*pi)
 
 void make_atan2_table()
 {
-    int i,q;
+    unsigned i,q;
+    union {
+        uint8_t iq[2];
+        uint16_t iq16;
+    } u;
 
     for (i = 0; i < 256; ++i) {
         for (q = 0; q < 256; ++q) {
@@ -80,8 +84,10 @@ void make_atan2_table()
             double d_q = (q - 127.5);
             double ang = atan2(d_q, d_i) + M_PI; // atan2 returns [-pi..pi], normalize to [0..2*pi]
             double scaled_ang = round(32768 * ang / M_PI);
-            
-            iqphase[i][q] = (scaled_ang < 0 ? 0 : scaled_ang > 65535 ? 65535 : (uint16_t)scaled_ang);
+
+            u.iq[0] = i;
+            u.iq[1] = q;
+            iqphase[u.iq16] = (scaled_ang < 0 ? 0 : scaled_ang > 65535 ? 65535 : (uint16_t)scaled_ang);
         }
     }
 }
@@ -115,9 +121,17 @@ void make_atan2_table()
 #define UPLINK_FRAME_DATA_BYTES (UPLINK_FRAME_DATA_BITS/8)
 #define UPLINK_FRAME_BYTES (UPLINK_FRAME_BITS/8)
 
+static void convert_to_phi(uint16_t *buffer, int n)
+{
+    int i;
+
+    for (i = 0; i < n; ++i)
+        buffer[i] = iqphase[buffer[i]];
+}
+
 void read_from_stdin()
 {
-    uint8_t buffer[65536*4];
+    char buffer[65536*2];
     int n;
     int used = 0;
     uint64_t offset = 0;
@@ -125,16 +139,20 @@ void read_from_stdin()
     while ( (n = read(0, buffer+used, sizeof(buffer)-used)) > 0 ) {
         int processed;
 
+        convert_to_phi((uint16_t*) (buffer+(used&~1)), ((used&1)+n)/2);
+
         used += n;
-        processed = process_buffer(buffer, used, offset);
-        used -= processed;
+        processed = process_buffer((uint16_t*) buffer, used/2, offset);
+        used -= processed * 2;
         offset += processed;
-        if (used > 0)
-            memmove(buffer, buffer+processed, used);
+        if (used > 0) {
+            //fprintf(stderr, "move: %d+%d -> 0+%d\n", processed*2, used, used);
+            memmove(buffer, buffer+processed*2, used);
+        }
     }
 }
 
-int find_average_dphi(uint8_t *input, uint64_t pattern, int16_t *center, int32_t *separation)
+int find_average_dphi(uint16_t *phi, uint64_t pattern, int16_t *center, int32_t *separation)
 {
     int i;
 
@@ -144,16 +162,14 @@ int find_average_dphi(uint8_t *input, uint64_t pattern, int16_t *center, int32_t
     int one_bits = 0;
 
     for (i = 0; i < 36; ++i) {
-        uint16_t phi0 = iqphase[input[i*4+0]][input[i*4+1]];
-        uint16_t phi1 = iqphase[input[i*4+2]][input[i*4+3]];
-        int16_t delta_phi = phi1 - phi0;
+        int16_t dphi = phi[i*2+1] - phi[i*2];
 
         if (pattern & (1UL << (35-i))) {
             ++one_bits;
-            dphi_one_total += delta_phi;
+            dphi_one_total += dphi;
         } else {
             ++zero_bits;
-            dphi_zero_total += delta_phi;
+            dphi_zero_total += dphi;
         }
     }
 
@@ -178,9 +194,9 @@ int find_average_dphi(uint8_t *input, uint64_t pattern, int16_t *center, int32_t
         return 1;
 }
 
-int process_buffer(uint8_t *input, int len, uint64_t offset)
+int process_buffer(uint16_t *phi, int len, uint64_t offset)
 {
-    uint16_t last_phi = iqphase[input[0]][input[1]];
+    uint16_t last_phi = phi[0];
     uint64_t sync0 = 0, sync1 = 0;
     int i;    
 
@@ -201,9 +217,9 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
     // our caller will pass the remaining data back to us as the
     // start of the buffer next time. This means we don't need to maintain
     // state between calls.
-    for (i = 2; i+(UPLINK_FRAME_BITS+1)*4 < len; i += 4) {
-        uint16_t phi0 = iqphase[input[i+0]][input[i+1]];
-        uint16_t phi1 = iqphase[input[i+2]][input[i+3]];
+    for (i = 2; i+(UPLINK_FRAME_BITS+1)*2 < len; i += 2) {
+        uint16_t phi0 = phi[i+0];
+        uint16_t phi1 = phi[i+1];
         int16_t dphi0 = phi0 - last_phi;  // don't need to worry about wrapping at +/-pi, the width of the datatype does it for us
         int16_t dphi1 = phi1 - phi0;
 
@@ -218,35 +234,35 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
 
         // see if we have a valid sync word
         if ((sync0 & SYNC_MASK) == ADSB_SYNC_WORD) {
-            int skip = decode_adsb_frame(offset+i+2, input+i+2);
+            int skip = decode_adsb_frame(offset+i+1, phi+i+1);
             if (skip) {
-                i = i + 2 + skip - 4;
+                i = i + 1 + skip - 2;
                 continue;
             }                
         } else if ((sync0 & SYNC_MASK) == UPLINK_SYNC_WORD) {
-            int skip = decode_uplink_frame(offset+i+2, input+i+2);
+            int skip = decode_uplink_frame(offset+i+1, phi+i+1);
             if (skip) {
-                i = i + 2 + skip - 4;
+                i = i + 1 + skip - 2;
                 continue;
             }
         }
 
         if ((sync1 & SYNC_MASK) == ADSB_SYNC_WORD) {
-            int skip = decode_adsb_frame(offset+i+4, input+i+4);
+            int skip = decode_adsb_frame(offset+i+2, phi+i+2);
             if (skip) {
-                i = i + 4 + skip - 4;
+                i = i + 2 + skip - 2;
                 continue;
             }                
         } else if ((sync1 & SYNC_MASK) == UPLINK_SYNC_WORD) {
-            int skip = decode_uplink_frame(offset+i+4, input+i+4);
+            int skip = decode_uplink_frame(offset+i+2, phi+i+2);
             if (skip) {
-                i = i + 4 + skip - 4;
+                i = i + 2 + skip - 2;
                 continue;
             }                
         }
     }
 
-    return i - (SYNC_BITS-1)*4;
+    return i - (SYNC_BITS-1)*2;
 }
 
 void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
@@ -264,7 +280,7 @@ void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
         *wgs_lng -= 360.0;        
 } 
 
-int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
+int decode_adsb_frame(uint64_t timestamp, uint16_t *phi)
 {
     int i;
     uint8_t framedata[LONG_FRAME_BYTES];
@@ -274,16 +290,14 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
     struct uat_adsb_mdb mdb;
     int n_corrected;
 
-    if (!find_average_dphi(input-36*4, ADSB_SYNC_WORD, &average_dphi, &separation)) {
+    if (!find_average_dphi(phi-36*2, ADSB_SYNC_WORD, &average_dphi, &separation)) {
         return 0;
     }
 
     memset(framedata, 0, sizeof(framedata));
 
     for (i = 0; i < LONG_FRAME_BITS; ++i) {
-        uint16_t phi0 = iqphase[input[i*4+0]][input[i*4+1]];
-        uint16_t phi1 = iqphase[input[i*4+2]][input[i*4+3]];
-        int16_t dphi = phi1 - phi0;
+        int16_t dphi = phi[i*2+1] - phi[i*2];
         
         if (dphi > average_dphi)
             framedata[i/8] |= (1 << (7 - (i&7)));
@@ -307,7 +321,7 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
         }
 
         fflush(stdout);
-        return LONG_FRAME_BITS*4;
+        return LONG_FRAME_BITS*2;
     }
 
     // Retry as Basic UAT
@@ -326,7 +340,7 @@ int decode_adsb_frame(uint64_t timestamp, uint8_t *input)
         }
 
         fflush(stdout);
-        return SHORT_FRAME_BITS*4;
+        return SHORT_FRAME_BITS*2;
     }
 
     // Nope.
@@ -431,7 +445,7 @@ void decode_uplink_mdb(uint8_t *blockdata)
         decode_uplink_app_data(blockdata);
 }   
 
-int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
+int decode_uplink_frame(uint64_t timestamp, uint16_t *phi)
 {
     int i, block;
     uint8_t interleaved[UPLINK_FRAME_BYTES];
@@ -439,16 +453,14 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
     int32_t separation;
     uint8_t deinterleaved[UPLINK_FRAME_DATA_BYTES];
 
-    if (!find_average_dphi(input-36*4, UPLINK_SYNC_WORD, &average_dphi, &separation)) {
+    if (!find_average_dphi(phi-36*2, UPLINK_SYNC_WORD, &average_dphi, &separation)) {
         return 0;
     }
 
     memset(interleaved, 0, sizeof(interleaved));
 
     for (i = 0; i < UPLINK_FRAME_BITS; ++i) {
-        uint16_t phi0 = iqphase[input[i*4+0]][input[i*4+1]];
-        uint16_t phi1 = iqphase[input[i*4+2]][input[i*4+3]];
-        int16_t dphi = phi1 - phi0;
+        int16_t dphi = phi[i*2+1] - phi[i*2+0];
         
         if (dphi > average_dphi)
             interleaved[i/8] |= (1 << (7 - (i&7)));
@@ -482,7 +494,7 @@ int decode_uplink_frame(uint64_t timestamp, uint8_t *input)
     }
 
     fflush(stdout);
-    return UPLINK_FRAME_BITS*4;
+    return UPLINK_FRAME_BITS*2;
 }
 
 
