@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-static void dump_raw_message(char updown, uint8_t *data, int len)
+static void dump_raw_message(char updown, uint8_t *data, int len, int rs_errors)
 {
     int i;
 
@@ -64,6 +64,8 @@ static void dump_raw_message(char updown, uint8_t *data, int len)
         fprintf(stdout, "%02x", data[i]);
     }
 
+    if (rs_errors)
+        fprintf(stdout, ";rs=%d", rs_errors);
     fprintf(stdout, ";\n");
 }
 
@@ -308,7 +310,7 @@ int decode_adsb_frame(uint64_t timestamp, uint16_t *phi)
     memcpy(short_framedata, framedata, SHORT_FRAME_BYTES);
     n_corrected = decode_rs_char(rs_adsb_long, framedata, NULL, 0);
     if (n_corrected >= 0 && n_corrected <= 7 && (framedata[0]>>3) != 0) {
-        dump_raw_message('-', framedata, LONG_FRAME_DATA_BYTES);
+        dump_raw_message('-', framedata, LONG_FRAME_DATA_BYTES, n_corrected);
         if (!raw_mode) {
             uat_decode_adsb_mdb(framedata, &mdb);
             
@@ -327,7 +329,7 @@ int decode_adsb_frame(uint64_t timestamp, uint16_t *phi)
     // Retry as Basic UAT
     n_corrected = decode_rs_char(rs_adsb_short, short_framedata, NULL, 0);
     if (n_corrected >= 0 && n_corrected <= 6 && (short_framedata[0]>>3) == 0) {
-        dump_raw_message('-', short_framedata, SHORT_FRAME_DATA_BYTES);
+        dump_raw_message('-', short_framedata, SHORT_FRAME_DATA_BYTES, n_corrected);
         if (!raw_mode) {
             uat_decode_adsb_mdb(short_framedata, &mdb);
             
@@ -452,6 +454,7 @@ int decode_uplink_frame(uint64_t timestamp, uint16_t *phi)
     int16_t average_dphi;
     int32_t separation;
     uint8_t deinterleaved[UPLINK_FRAME_DATA_BYTES];
+    int total_corrected = 0;
 
     if (!find_average_dphi(phi-36*2, UPLINK_SYNC_WORD, &average_dphi, &separation)) {
         return 0;
@@ -476,14 +479,14 @@ int decode_uplink_frame(uint64_t timestamp, uint16_t *phi)
 
         n_corrected = decode_rs_char(rs_uplink, blockdata, NULL, 0);
         if (n_corrected < 0 || n_corrected > 10) {
-            //fprintf(stdout, "fail %d %d\n", block, n_corrected);
             return 0;
         }
 
         memcpy (deinterleaved + UPLINK_BLOCK_DATA_BYTES*block, blockdata, UPLINK_BLOCK_DATA_BYTES); // drop the trailing ECC part
+        total_corrected += n_corrected;
     }
 
-    dump_raw_message('+', deinterleaved, UPLINK_FRAME_DATA_BYTES);
+    dump_raw_message('+', deinterleaved, UPLINK_FRAME_DATA_BYTES, total_corrected);
     if (!raw_mode) {
         fprintf(stdout,
                 "%.6f   Uplink MDB received\n"
