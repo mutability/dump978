@@ -201,7 +201,7 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
     // our caller will pass the remaining data back to us as the
     // start of the buffer next time. This means we don't need to maintain
     // state between calls.
-    for (i = 2; i+(SYNC_BITS+UPLINK_FRAME_BITS+3)*4 < len; i += 4) {
+    for (i = 2; i+(UPLINK_FRAME_BITS+1)*4 < len; i += 4) {
         uint16_t phi0 = iqphase[input[i+0]][input[i+1]];
         uint16_t phi1 = iqphase[input[i+2]][input[i+3]];
         int16_t dphi0 = phi0 - last_phi;  // don't need to worry about wrapping at +/-pi, the width of the datatype does it for us
@@ -246,7 +246,7 @@ int process_buffer(uint8_t *input, int len, uint64_t offset)
         }
     }
 
-    return i;
+    return i - (SYNC_BITS-1)*4;
 }
 
 void decode_latlng(int lat, int lng, double *wgs_lat, double *wgs_lng)
