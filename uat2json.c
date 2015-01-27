@@ -21,14 +21,13 @@
 #include <string.h>
 #include <limits.h>
 
-#include <unistd.h>
 #include <time.h>
 #include <sys/select.h>
-#include <fcntl.h>
 #include <errno.h>
 
 #include "uat.h"
 #include "uat_decode.h"
+#include "reader.h"
 
 #define NON_ICAO_ADDRESS 0x1000000U
 
@@ -275,119 +274,47 @@ static void periodic_work()
     }
 }
 
-#define SHORT_FRAME_SIZE (144/8)
-#define LONG_FRAME_SIZE (272/8)
-
-static void handle_frame(uint8_t *frame, int len)
+static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
 {
     struct uat_adsb_mdb mdb;
 
-    if (len != SHORT_FRAME_SIZE && len != LONG_FRAME_SIZE) {
+    if (type != UAT_DOWNLINK)
+        return;
+
+    if (len == SHORT_FRAME_DATA_BYTES) {
+        if ((frame[0] >> 3) != 0) {
+            fprintf(stderr, "short frame with non-zero type\n");
+            return;
+        }
+    } else if (len == LONG_FRAME_DATA_BYTES) {
+        if ((frame[0] >> 3) == 0) {
+            fprintf(stderr, "long frame with zero type\n");
+            return;
+        }
+    } else {
         fprintf(stderr, "odd frame size: %d\n", len);
         return;
     }
 
-    if (len == SHORT_FRAME_SIZE && (frame[0]>>3) != 0) {
-        fprintf(stderr, "short frame with non-zero type\n");
-        return;
-    }
-
-    if (len == LONG_FRAME_SIZE && (frame[0]>>3) == 0) {
-        fprintf(stderr, "long frame with zero type\n");
-        return;
-    }
-
     uat_decode_adsb_mdb(frame, &mdb);
-    uat_display_adsb_mdb(&mdb, stdout);    
+    //uat_display_adsb_mdb(&mdb, stdout);    
     process_mdb(&mdb);
 }                                                        
 
-static int hexbyte(char *buf)
-{
-    int i;
-    char c;
-
-    c = buf[0];
-    if (c >= '0' && c <= '9')
-        i = (c - '0');
-    else if (c >= 'a' && c <= 'f')
-        i = (c - 'a' + 10);
-    else if (c >= 'A' && c <= 'F')
-        i = (c - 'A' + 10);
-    else
-        return -1;
-
-    i <<= 4;
-    c = buf[1];
-    if (c >= '0' && c <= '9')
-        return i | (c - '0');
-    else if (c >= 'a' && c <= 'f')
-        return i | (c - 'a' + 10);
-    else if (c >= 'A' && c <= 'F')
-        return i | (c - 'A' + 10);
-    else
-        return -1;
-}
-
-static int process_input(char *buf, int len)
-{
-    char *p = buf;
-
-    for (;;) {
-        char *newline;
-
-        if (p >= buf+len)
-            return len;
-
-        newline = memchr(p, '\n', buf+len-p);
-        if (newline == NULL)
-            return p-buf;
-        
-        if (*p == '-') {           
-            uint8_t frame[LONG_FRAME_SIZE];
-            uint8_t *out = frame;
-
-            ++p;
-            while (p < newline) {
-                int byte;
-                
-                if (p[0] == ';' || p[0] == '\r') {
-                    handle_frame(frame, out-frame);
-                    break;
-                }
-
-                if (out >= frame+sizeof(frame)) {
-                    fprintf(stderr, "downlink message is too long\n");
-                    break;
-                }
-                
-                byte = hexbyte(p);
-                if (byte < 0) {
-                    fprintf(stderr, "bad hexbyte in downlink message: %c%c\n", p[0], p[1]);
-                    break;
-                }
-                
-                *out++ = byte;
-                p += 2;
-            }
-        }
-            
-        p = newline+1;
-    }
-}
-
 static void read_loop()
 {
-    char buf[4096];
-    int used = 0;
+    struct dump978_reader *reader;
 
-    fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
+    reader = dump978_reader_new(0, 1);
+    if (!reader) {
+        perror("dump978_reader_new");
+        return;
+    }
 
     for (;;) {
         fd_set readset, writeset, excset;
         struct timeval timeout;
-        ssize_t bytes_read;
-        int consumed;
+        int framecount;
 
         FD_ZERO(&readset);
         FD_ZERO(&writeset);
@@ -398,33 +325,22 @@ static void read_loop()
         timeout.tv_usec = 500000;
 
         select(1, &readset, &writeset, &excset, &timeout);
-        bytes_read = read(0, buf+used, sizeof(buf)-used);
-        if (bytes_read == 0)
-            return;
-
-        if (bytes_read < 0 && errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK) {
-            perror("read");
-            return;
-        }
 
         NOW = time(NULL);
+        framecount = dump978_read_frames(reader, handle_frame, NULL);
 
-        if (bytes_read > 0) {
-            used += bytes_read;
-            consumed = process_input(buf, used);
+        if (framecount == 0)
+            break;
 
-            if (used == sizeof(buf) && consumed == 0) {
-                fprintf(stderr, "line too long, ditching input\n");
-                used = 0;
-            } else {
-                used -= consumed;
-                if (used > 0)
-                    memmove(buf, buf+consumed, used);
-            }
+        if (framecount < 0 && errno != EAGAIN && errno != EINTR && errno != EWOULDBLOCK) {
+            perror("dump978_read_frames");
+            break;
         }
 
         periodic_work();
     }
+
+    dump978_reader_free(reader);
 }                    
 
 int main(int argc, char **argv)

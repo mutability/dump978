@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #include "uat.h"
-#include "uat_decode.h"
 #include "fec/rs.h"
 
 void *rs_uplink;
@@ -46,29 +45,6 @@ static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs);
 #define ADSB_SYNC_WORD   0xEACDDA4E2UL
 #define UPLINK_SYNC_WORD 0x153225B1DUL
 
-#define SHORT_FRAME_DATA_BITS (144)
-#define SHORT_FRAME_BITS (SHORT_FRAME_DATA_BITS+96)
-#define SHORT_FRAME_DATA_BYTES (SHORT_FRAME_DATA_BITS/8)
-#define SHORT_FRAME_BYTES (SHORT_FRAME_BITS/8)
-
-#define LONG_FRAME_DATA_BITS (272)
-#define LONG_FRAME_BITS (LONG_FRAME_DATA_BITS+112)
-#define LONG_FRAME_DATA_BYTES (LONG_FRAME_DATA_BITS/8)
-#define LONG_FRAME_BYTES (LONG_FRAME_BITS/8)
-
-#define UPLINK_BLOCK_DATA_BITS (576)
-#define UPLINK_BLOCK_BITS (UPLINK_BLOCK_DATA_BITS+160)
-#define UPLINK_BLOCK_DATA_BYTES (UPLINK_BLOCK_DATA_BITS/8)
-#define UPLINK_BLOCK_BYTES (UPLINK_BLOCK_BITS/8)
-
-#define UPLINK_FRAME_BLOCKS (6)
-#define UPLINK_FRAME_DATA_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_DATA_BITS)
-#define UPLINK_FRAME_BITS (UPLINK_FRAME_BLOCKS * UPLINK_BLOCK_BITS)
-#define UPLINK_FRAME_DATA_BYTES (UPLINK_FRAME_DATA_BITS/8)
-#define UPLINK_FRAME_BYTES (UPLINK_FRAME_BITS/8)
-
-static int raw_mode = 0;
-
 // relying on signed overflow is theoretically bad. Let's do it properly.
 
 #ifdef USE_SIGNED_OVERFLOW
@@ -88,9 +64,6 @@ inline int16_t phi_difference(uint16_t from, uint16_t to)
 
 int main(int argc, char **argv)
 {
-    if (argc > 1 && !strcmp(argv[1], "-raw"))
-        raw_mode = 1;
-
     rs_adsb_short = init_rs_char(8, /* gfpoly */ ADSB_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 12, /* pad */ 225);
     rs_adsb_long  = init_rs_char(8, /* gfpoly */ ADSB_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 14, /* pad */ 207);
     rs_uplink     = init_rs_char(8, /* gfpoly */ UPLINK_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 20, /* pad */ 163);
@@ -117,11 +90,6 @@ static void dump_raw_message(char updown, uint8_t *data, int len, int rs_errors)
 static void handle_adsb_frame(uint64_t timestamp, uint8_t *frame, int rs)
 {
     dump_raw_message('-', frame, (frame[0]>>3) == 0 ? SHORT_FRAME_DATA_BYTES : LONG_FRAME_DATA_BYTES, rs);
-    if (!raw_mode) {
-        struct uat_adsb_mdb mdb;
-        uat_decode_adsb_mdb(frame, &mdb);
-        uat_display_adsb_mdb(&mdb, stdout);
-    }
     fflush(stdout);
 }
 

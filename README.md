@@ -2,18 +2,41 @@
 
 Experimental demodulator/decoder for 978MHz UAT signals.
 
-This expects 8-bit I/Q samples on stdin at 2.083334MHz, for example:
+## Demodulator
+
+dump978 is the demodulator. It expects 8-bit I/Q samples on stdin at
+2.083334MHz, for example:
 
 ````
 $ rtl_sdr -f 978000000 -s 2083334 -g 48 - | ./dump978
 ````
 
-Run with no args to get verbose decoding.
-Run with -raw to get raw message data only.
+It outputs one one line per demodulated message, in the form:
+
+````
++012345678..; this is an uplink message
+-012345678..; this is a downlink message
+````
+
+For parsers: ignore everything between the first semicolon and newline that
+you don't understand, it will be used for metadata later. See reader.[ch] for
+a reference implementation.
+
+## Decoder
+
+To decode downlink messages into a readable form (uplink messages are
+not yet handled) use uat2text:
+
+````
+$ rtl_sdr -f 978000000 -s 2083334 -g 48 - | ./dump978 | ./uat2text
+````
 
 See sample-output.txt for some example output.
 
-## uat2json
+## Map generation via uat2json
+
+uat2json writes aircraft.json files in the format expected by dump1090's
+map html/javascript.
 
 To set up a live map feed:
 
@@ -40,7 +63,7 @@ $ mkdir /var/www/dump978map/data
 
 ````
 $ rtl_sdr -f 978000000 -s 2083334 -g 48 - | \
-  ./dump978 -raw | \
+  ./dump978 | \
   ./uat2json /var/www/dump978map/data
 ````
 

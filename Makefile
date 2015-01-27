@@ -3,7 +3,7 @@ LDFLAGS=
 LIBS=-lm
 CC=gcc
 
-all: dump978 uat2json
+all: dump978 uat2json uat2text
 
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
@@ -11,8 +11,11 @@ all: dump978 uat2json
 dump978: dump978.o uat_decode.o fec/decode_rs_char.o fec/init_rs_char.o
 	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
 
-uat2json: uat2json.o uat_decode.o 
+uat2json: uat2json.o uat_decode.o reader.o
+	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
+
+uat2text: uat2text.o uat_decode.o reader.o
 	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
 
 clean:
-	rm *.o fec/*.o dump978 uat2json
+	rm *.o fec/*.o dump978 uat2json uat2text
