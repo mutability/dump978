@@ -24,12 +24,34 @@
 
 static void checksum_and_send(uint8_t *esnt_frame);
 
-static int encode_altitude(int valid, int ft)
+// If you call this with constants for firstbit/lastbit
+// gcc will do a pretty good job of crunching it down
+// to just a couple of operations. Even more so if value
+// is also constant.
+static inline void setbits(uint8_t *frame, unsigned firstbit, unsigned lastbit, uint32_t value)
+{
+    // convert to 0-based:
+    unsigned lb = lastbit-1;
+    
+    // align value with byte layout:
+    unsigned offset = 7 - (lb&7);
+    unsigned nb = (lastbit - firstbit + 1 + offset);
+    uint32_t mask = (1 << (lastbit-firstbit+1))-1;
+    uint32_t imask = ~(mask << offset);
+    uint32_t aligned = (value & mask) << offset;
+
+    frame[lb >> 3] = (frame[lb >> 3] & imask) | aligned;
+    if (nb > 8)
+        frame[(lb >> 3) - 1] = (frame[(lb >> 3) - 1] & (imask >> 8)) | (aligned >> 8);
+    if (nb > 16)
+        frame[(lb >> 3) - 2] = (frame[(lb >> 3) - 2] & (imask >> 16)) | (aligned >> 16);
+    if (nb > 24)
+        frame[(lb >> 3) - 3] = (frame[(lb >> 3) - 3] & (imask >> 24)) | (aligned >> 24);
+}
+
+static int encode_altitude(int ft)
 {
     int i;
-
-    if (!valid)
-        return 0;
 
     i = (ft + 1000) / 25;
     if (i < 0) i = 0;
@@ -38,65 +60,50 @@ static int encode_altitude(int valid, int ft)
     return (i & 0x000F) | 0x0010 | ((i & 0x07F0) << 1);
 }
 
-static int encode_ground_movement(int valid, int speed_kt)
+static int encode_ground_speed(int kt)
 {
-    if (!valid)
-        return 0;
-    if (speed_kt > 175)
+    if (kt > 175)
         return 124;
-    if (speed_kt > 100)
-        return (speed_kt - 100) / 5 + 108;
-    if (speed_kt > 70)
-        return (speed_kt - 70) / 2 + 93;
-    if (speed_kt > 15)
-        return (speed_kt - 15) + 38;
-    if (speed_kt > 2)
-        return (speed_kt - 2) * 2 + 11;
-    if (speed_kt == 2)
+    if (kt > 100)
+        return (kt - 100) / 5 + 108;
+    if (kt > 70)
+        return (kt - 70) / 2 + 93;
+    if (kt > 15)
+        return (kt - 15) + 38;
+    if (kt > 2)
+        return (kt - 2) * 2 + 11;
+    if (kt == 2)
         return 12;
-    if (speed_kt == 1)
+    if (kt == 1)
         return 8;
     return 1;
 }
 
-static int encode_ground_track(int valid, int track)
-{
-    if (!valid)
-        return 0;
-    return 0x80 | (track * 128 / 360);
-}
-
-static int encode_air_velocity(int valid, int vel, int supersonic)
+static int encode_air_speed(int kt, int supersonic)
 {
     int sign;
 
-    if (!valid)
-        return 0;
-
-    if (vel < 0) {
+    if (kt < 0) {
         sign = 0x0400;
-        vel = -vel;
+        kt = -kt;
     } else {
         sign = 0;
     }
     
     if (supersonic)
-        vel = vel / 4;
+        kt = kt / 4;
     
-    ++vel;
-    if (vel > 1023)
-        vel = 1023;
+    ++kt;
+    if (kt > 1023)
+        kt = 1023;
 
-    return vel | sign;
+    return kt | sign;
 }
 
-static int encode_vert_rate(int valid, int rate)
+static int encode_vert_rate(int rate)
 {
     int sign;
 
-    if (!valid)
-        return 0;
-    
     if (rate < 0) {
         sign = 0x200;
         rate = -rate;
@@ -105,7 +112,7 @@ static int encode_vert_rate(int valid, int rate)
     }
 
     rate = (rate / 64) + 1;
-    if (rate >= 511)
+    if (rate > 511)
         rate = 511;
 
     return rate | sign;
@@ -213,83 +220,217 @@ static int encode_cpr_lon(double lat, double lon, int odd, int surface)
     return XZ & 0x1FFFF; // always a 17-bit field
 }
 
-static void generate_esnt_ground_position(int metype,
-                                          uint32_t address,                                          
-                                          int raw_lat,
-                                          int raw_lon,
-                                          int raw_movement,
-                                          int raw_track,
-                                          int odd)
+static void send_altitude_only(struct uat_adsb_mdb *mdb)
 {
     uint8_t esnt_frame[14];
+    int raw_alt;
 
-    esnt_frame[0] = (18 << 3) | (5);   // DF 18, TIS-B relay of ADS-B message with other address
-    esnt_frame[1] = (address & 0xFF0000) >> 16;
-    esnt_frame[2] = (address & 0x00FF00) >> 8;
-    esnt_frame[3] = (address & 0x0000FF);
-    esnt_frame[4] = (metype << 3) | ((raw_movement & 0x70) >> 4);   // ES type, ground movement bits
-    esnt_frame[5] = ((raw_movement & 0x0F) << 4) | ((raw_track & 0xF0) >> 4);  // ground movement, track
-    esnt_frame[6] = ((raw_track & 0x0F) << 4) | (odd ? 0x04 : 0x00) | ((raw_lat >> 15) & 0x03); // track, time, odd, lat
-    esnt_frame[7] = ((raw_lat >> 7) & 0xFF); // lat
-    esnt_frame[8] = ((raw_lat << 1) & 0xFE) | ((raw_lon >> 16) & 0x01); // lat, lon
-    esnt_frame[9] = ((raw_lon >> 8) & 0xFF); // lon
-    esnt_frame[10] = (raw_lon & 0xFF); // lon
-    esnt_frame[11] = 0; // crc
-    esnt_frame[12] = 0; // crc
-    esnt_frame[13] = 0; // crc
+    // Need barometric altitude, see if we have it
+    if (mdb->altitude_type == ALT_BARO) {
+        raw_alt = encode_altitude(mdb->altitude);
+    } else if (mdb->sec_altitude_type == ALT_BARO) {
+        raw_alt = encode_altitude(mdb->sec_altitude);
+    } else {
+        raw_alt = 0;
+    }
+
+    setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
+    setbits(esnt_frame, 6, 8, 5);                  // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 9, 32, mdb->address);      // AA
+
+    // ES:
+    setbits(esnt_frame+4, 1, 5, 0);                // FORMAT TYPE CODE = 0, barometric altitude with no position
+    setbits(esnt_frame+4, 6, 7, 0);                // SURVEILLANCE STATUS normal
+    setbits(esnt_frame+4, 8, 8, 0);                // SINGLE ANTENNA FLAG
+    setbits(esnt_frame+4, 9, 20, raw_alt);         // ALTITUDE
+    setbits(esnt_frame+4, 21, 21, 0);              // TIME (T)
+    setbits(esnt_frame+4, 22, 22, 0);              // CPR FORMAT (F)
+    setbits(esnt_frame+4, 23, 39, 0);              // ENCODED LATITUDE
+    setbits(esnt_frame+4, 40, 56, 0);              // ENCODED LONGITUDE
+
     checksum_and_send(esnt_frame);
 }
 
-static void generate_esnt_air_position(int metype,
-                                       uint32_t address,                                          
-                                       int raw_alt,
-                                       int raw_lat,
-                                       int raw_lon,
-                                       int odd)
+static void maybe_send_surface_position(struct uat_adsb_mdb *mdb)
 {
     uint8_t esnt_frame[14];
 
-    esnt_frame[0] = (18 << 3) | (5);   // DF 18, TIS-B relay of ADS-B message with other address
-    esnt_frame[1] = (address & 0xFF0000) >> 16;
-    esnt_frame[2] = (address & 0x00FF00) >> 8;
-    esnt_frame[3] = (address & 0x0000FF);
-    esnt_frame[4] = (metype << 3); // metype, SAF=0, FS=normal/airborne
-    esnt_frame[5] = ((raw_alt >> 4) & 0xFF);    // altitude
-    esnt_frame[6] = ((raw_alt << 4) & 0xF0) | (odd ? 0x04 : 0x00) | ((raw_lat >> 15) & 0x03); // alt, time, odd, lat
-    esnt_frame[7] = ((raw_lat >> 7) & 0xFF); // lat
-    esnt_frame[8] = ((raw_lat << 1) & 0xFE) | ((raw_lon >> 16) & 0x01); // lat, lon
-    esnt_frame[9] = ((raw_lon >> 8) & 0xFF); // lon
-    esnt_frame[10] = (raw_lon & 0xFF); // lon
-    esnt_frame[11] = 0; // crc
-    esnt_frame[12] = 0; // crc
-    esnt_frame[13] = 0; // crc
+    if (mdb->airground_state != AG_GROUND)
+        return; // nope!
+
+    setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
+    setbits(esnt_frame, 6, 8, 5);                  // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 9, 32, mdb->address);      // AA
+
+    setbits(esnt_frame+4, 1, 5, 8);                                            // FORMAT TYPE CODE = 8, surface position (NUCp=6)
+
+    if (!mdb->speed_valid) {
+        setbits(esnt_frame+4, 6, 12, 0);                                       // MOVEMENT: invalid
+    } else {
+        setbits(esnt_frame+4, 6, 12, encode_ground_speed(mdb->speed));         // MOVEMENT
+    }
+
+    if (mdb->track_type != TT_TRACK) {
+        setbits(esnt_frame+4, 13, 13, 0);                                      // STATUS for ground track: invalid
+        setbits(esnt_frame+4, 14, 20, 0);                                      // GROUND TRACK (TRUE)
+    } else {
+        setbits(esnt_frame+4, 13, 13, 1);                                      // STATUS for ground track: valid
+        setbits(esnt_frame+4, 14, 20, mdb->track * 128 / 360);                 // GROUND TRACK (TRUE)
+    }
+
+    setbits(esnt_frame+4, 21, 21, 0);                                          // TIME (T)
+
+    // even frame:
+    setbits(esnt_frame+4, 22, 22, 0);                                          // CPR FORMAT (F) = even
+    setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 0, 1));   // ENCODED LATITUDE
+    setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 0, 1));   // ENCODED LONGITUDE
+    checksum_and_send(esnt_frame);
+
+    // odd frame:
+    setbits(esnt_frame+4, 22, 22, 1);                                          // CPR FORMAT (F) = odd
+    setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 1, 1));   // ENCODED LATITUDE
+    setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 1, 1));   // ENCODED LONGITUDE
     checksum_and_send(esnt_frame);
 }
 
-static void generate_esnt_air_velocity(int metype,
-                                       int mesub,
-                                       uint32_t address,
-                                       int raw_ns_vel,
-                                       int raw_ew_vel,
-                                       int raw_vert_rate)
+static void maybe_send_air_position(struct uat_adsb_mdb *mdb)
 {
     uint8_t esnt_frame[14];
+    int raw_alt;
 
-    esnt_frame[0] = (18 << 3) | (5);   // DF 18, TIS-B relay of ADS-B message with other address
-    esnt_frame[1] = (address & 0xFF0000) >> 16;
-    esnt_frame[2] = (address & 0x00FF00) >> 8;
-    esnt_frame[3] = (address & 0x0000FF);
-    esnt_frame[4] = (metype << 3) | mesub; // metype, mesub
-    esnt_frame[5] = ((raw_ew_vel >> 8) & 0x07); // intent change = 0, IFR = 0, NUCr = 0, E/W vel
-    esnt_frame[6] = (raw_ew_vel & 0xFF); // E/W vel
-    esnt_frame[7] = ((raw_ns_vel >> 3) & 0xFF); // N/S vel
-    esnt_frame[8] = ((raw_ns_vel << 5) & 0xE0) | ((raw_vert_rate >> 6) & 0x1F); // N/S vel, VR source, VR
-    esnt_frame[9] = ((raw_vert_rate << 2) & 0xFC);  // VR
-    esnt_frame[10] = 0; // gnss alt difference (TODO)
-    esnt_frame[11] = 0; // crc
-    esnt_frame[12] = 0; // crc
-    esnt_frame[13] = 0; // crc
+    if (mdb->airground_state != AG_SUPERSONIC && mdb->airground_state != AG_SUBSONIC)
+        return; // nope!
+
+    if (!mdb->position_valid) {
+        send_altitude_only(mdb);
+        return;
+    }        
+
+    setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
+    setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 9, 32, mdb->address); // AA
+
+    // decide on a metype
+    switch (mdb->altitude_type) {
+    case ALT_BARO:
+        setbits(esnt_frame+4, 1, 5, 18);           // FORMAT TYPE CODE = 18, airborne position (baro alt)
+        raw_alt = encode_altitude(mdb->altitude);
+        break;
+        
+    case ALT_GEO:
+        setbits(esnt_frame+4, 1, 5, 22);           // FORMAT TYPE CODE = 22, airborne position (GNSS alt)
+        raw_alt = encode_altitude(mdb->altitude);
+        break;
+
+    default:
+        setbits(esnt_frame+4, 1, 5, 18);           // FORMAT TYPE CODE = 18, airborne position (baro alt)
+        raw_alt = 0; // unavailable
+        break;
+    }
+
+    setbits(esnt_frame+4, 6, 7, 0);                // SURVEILLANCE STATUS normal
+    setbits(esnt_frame+4, 8, 8, 0);                // SINGLE ANTENNA FLAG
+    setbits(esnt_frame+4, 9, 20, raw_alt);         // ALTITUDE
+    setbits(esnt_frame+4, 21, 21, 0);              // TIME (T)
+
+    // even frame:
+    setbits(esnt_frame+4, 22, 22, 0);                                                     // CPR FORMAT (F) - even
+    setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 0, 0));        // ENCODED LATITUDE
+    setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 0, 0));        // ENCODED LONGITUDE
     checksum_and_send(esnt_frame);
+
+    // odd frame:
+    setbits(esnt_frame+4, 22, 22, 1);                                                     // CPR FORMAT (F) - odd
+    setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 1, 0));        // ENCODED LATITUDE
+    setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 1, 0));        // ENCODED LONGITUDE
+    checksum_and_send(esnt_frame);
+}
+
+static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
+{
+    uint8_t esnt_frame[14];
+    int supersonic;
+
+    if (mdb->airground_state != AG_SUPERSONIC && mdb->airground_state != AG_SUBSONIC)
+        return; // nope!
+
+    if (!mdb->ew_vel_valid && !mdb->ns_vel_valid && mdb->vert_rate_source == ALT_INVALID) {
+        // not really any point sending this
+        return;
+    }
+
+    setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
+    setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 9, 32, mdb->address); // AA
+
+    supersonic = (mdb->airground_state == AG_SUPERSONIC);
+    setbits(esnt_frame+4, 1, 5, 19);               // FORMAT TYPE CODE = 19, airborne velocity
+    if (supersonic)
+        setbits(esnt_frame+4, 6, 8, 2);            // SUBTYPE = 2, supersonic, speed over ground
+    else
+        setbits(esnt_frame+4, 6, 8, 1);            // SUBTYPE = 1, subsonic, speed over ground
+
+    setbits(esnt_frame+4, 9, 9, 0);                // INTENT CHANGE FLAG
+    setbits(esnt_frame+4, 10, 10, 0);              // IFR CAPABILITY FLAG
+    setbits(esnt_frame+4, 11, 13, 0);              // NAVIGATIONAL UNCERTAINTY CATEGORY FOR VELOCITY
+
+    // EAST/WEST DIRECTION BIT + EAST/WEST VELOCITY
+    if (!mdb->ew_vel_valid)
+        setbits(esnt_frame+4, 14, 24, 0);                             
+    else
+        setbits(esnt_frame+4, 14, 24, encode_air_speed(mdb->ew_vel, supersonic));
+
+    // NORTH/SOUTH DIRECTION BIT + NORTH/SOUTH VELOCITY
+    if (!mdb->ns_vel_valid)
+        setbits(esnt_frame+4, 25, 35, 0);
+    else
+        setbits(esnt_frame+4, 25, 35, encode_air_speed(mdb->ns_vel, supersonic));
+
+    switch (mdb->vert_rate_source) {
+    case ALT_BARO:
+        setbits(esnt_frame+4, 36, 36, 0);                                 // SOURCE BIT FOR VERTICAL RATE = 0, barometric
+        setbits(esnt_frame+4, 37, 46, encode_vert_rate(mdb->vert_rate));  // SIGN BIT FOR VERTICAL RATE + VERTICAL RATE
+        break;
+
+    case ALT_GEO:
+        setbits(esnt_frame+4, 36, 36, 1);                                 // SOURCE BIT FOR VERTICAL RATE = 1, GNSS
+        setbits(esnt_frame+4, 37, 46, encode_vert_rate(mdb->vert_rate));  // SIGN BIT FOR VERTICAL RATE + VERTICAL RATE
+        break;
+
+    default:
+        setbits(esnt_frame+4, 36, 36, 0);                                 // SOURCE BIT FOR VERTICAL RATE = 0, barometric
+        setbits(esnt_frame+4, 37, 46, 0);                                 // SIGN BIT FOR VERTICAL RATE + VERTICAL RATE = 0, invalid
+        break;
+    }
+
+    setbits(esnt_frame+4, 47, 48, 0);              // RESERVED FOR TURN INDICATOR
+
+    if (mdb->altitude_type != ALT_INVALID && mdb->sec_altitude_type != ALT_INVALID) {
+        int delta, sign;
+
+        if (mdb->altitude < mdb->sec_altitude) { // secondary above primary
+            delta = mdb->sec_altitude - mdb->altitude;
+            sign = mdb->altitude_type == ALT_BARO ? 0 : 1;
+        } else { // primary above secondary
+            delta = mdb->altitude - mdb->sec_altitude;
+            sign = mdb->altitude_type == ALT_BARO ? 1 : 0;
+        }
+        
+        delta = delta / 25 + 1;
+        if (delta >= 127) delta = 127;
+        setbits(esnt_frame+4, 49, 49, sign);              // GNSS ALT SIGN BIT
+        setbits(esnt_frame+4, 50, 56, delta);             // GNSS ALT DIFFERENCE FROM BARO ALT
+    } else {
+        setbits(esnt_frame+4, 49, 49, 0);                 // GNSS ALT SIGN BIT
+        setbits(esnt_frame+4, 50, 56, 0);                 // GNSS ALT DIFFERENCE FROM BARO ALT = 0, invalid
+    }
+
+    checksum_and_send(esnt_frame);
+}
+
+static void maybe_send_callsign(struct uat_adsb_mdb *mdb)
+{
+    // TODO
 }
 
 // Generator polynomial for the Mode S CRC:
@@ -334,9 +475,9 @@ static void checksum_and_send(uint8_t *esnt_frame)
     int j;
     uint32_t rem = checksum(esnt_frame, 11);
 
-    esnt_frame[11] ^= (rem & 0xFF0000) >> 16;
-    esnt_frame[12] ^= (rem & 0x00FF00) >> 8;
-    esnt_frame[13] ^= (rem & 0x0000FF);
+    esnt_frame[11] = (rem & 0xFF0000) >> 16;
+    esnt_frame[12] = (rem & 0x00FF00) >> 8;
+    esnt_frame[13] = (rem & 0x0000FF);
 
     fprintf(stdout, "*");
     for (j = 0; j < 14; j++)
@@ -347,58 +488,10 @@ static void checksum_and_send(uint8_t *esnt_frame)
 
 static void generate_esnt(struct uat_adsb_mdb *mdb)
 {
-    if (!mdb->sv_valid)
-        return; // nothing useful.
-
-    // Process SV:
-    
-    if (!mdb->sv.position_valid) {
-        generate_esnt_air_position(0,
-                                   mdb->hdr.address,
-                                   encode_altitude(mdb->sv.altitude_valid, mdb->sv.altitude),
-                                   0, 0, 0);
-    } else if (mdb->sv.airground_state == AG_GROUND) {
-        generate_esnt_ground_position(8,
-                                      mdb->hdr.address,
-                                      encode_cpr_lat(mdb->sv.lat, mdb->sv.lon, 0, 1),
-                                      encode_cpr_lon(mdb->sv.lat, mdb->sv.lon, 0, 1),
-                                      encode_ground_movement(mdb->sv.speed_valid, mdb->sv.speed),
-                                      encode_ground_track(mdb->sv.track_valid, mdb->sv.track),
-                                      0);
-
-        generate_esnt_ground_position(8,
-                                      mdb->hdr.address,
-                                      encode_cpr_lat(mdb->sv.lat, mdb->sv.lon, 1, 1),
-                                      encode_cpr_lon(mdb->sv.lat, mdb->sv.lon, 1, 1),
-                                      encode_ground_movement(mdb->sv.speed_valid, mdb->sv.speed),
-                                      encode_ground_track(mdb->sv.track_valid, mdb->sv.track),
-                                      1);
-    } else {
-        generate_esnt_air_position(18,
-                                   mdb->hdr.address,
-                                   encode_altitude(mdb->sv.altitude_valid, mdb->sv.altitude),
-                                   encode_cpr_lat(mdb->sv.lat, mdb->sv.lon, 0, 0),
-                                   encode_cpr_lon(mdb->sv.lat, mdb->sv.lon, 0, 0),
-                                   0);
-        generate_esnt_air_position(18,
-                                   mdb->hdr.address,
-                                   encode_altitude(mdb->sv.altitude_valid, mdb->sv.altitude),
-                                   encode_cpr_lat(mdb->sv.lat, mdb->sv.lon, 1, 0),
-                                   encode_cpr_lon(mdb->sv.lat, mdb->sv.lon, 1, 0),
-                                   1);
-
-        if (mdb->sv.ns_vel_valid || mdb->sv.ew_vel_valid || mdb->sv.vert_rate_valid) {
-            int supersonic = (mdb->sv.airground_state == AG_SUPERSONIC);
-            generate_esnt_air_velocity(19,
-                                       supersonic ? 2 : 1,
-                                       mdb->hdr.address,
-                                       encode_air_velocity(mdb->sv.ns_vel_valid, mdb->sv.ns_vel, supersonic),
-                                       encode_air_velocity(mdb->sv.ew_vel_valid, mdb->sv.ew_vel, supersonic),
-                                       encode_vert_rate(mdb->sv.vert_rate_valid, mdb->sv.vert_rate));
-        }
-    }                                       
-
-    // XXX process MS for callsign and squawk
+    maybe_send_surface_position(mdb);
+    maybe_send_air_position(mdb);
+    maybe_send_air_velocity(mdb);
+    maybe_send_callsign(mdb);
 
 }
 
