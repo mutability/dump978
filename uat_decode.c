@@ -79,14 +79,14 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
     if (raw_alt != 0) {
         sv->altitude_valid = 1;
         sv->altitude = (raw_alt - 1) * 25 - 1000;
-        sv->altitude_type = (frame[9] & 1) ? GEO : BARO;
+        sv->altitude_type = (frame[9] & 1) ? ALT_GEO : ALT_BARO;
     }
     
     sv->airground_state = (frame[12] >> 6) & 0x03;
 
     switch (sv->airground_state) {
-    case AIRBORNE_SUBSONIC:
-    case AIRBORNE_SUPERSONIC:
+    case AG_SUBSONIC:
+    case AG_SUPERSONIC:
         {
             int raw_ns, raw_ew, raw_vvel;
             
@@ -96,7 +96,7 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
                 sv->ns_vel = ((raw_ns & 0x3ff) - 1);
                 if (raw_ns & 0x400)
                     sv->ns_vel = 0 - sv->ns_vel;
-                if (sv->airground_state == AIRBORNE_SUPERSONIC)
+                if (sv->airground_state == AG_SUPERSONIC)
                     sv->ns_vel *= 4;
             }
             
@@ -106,14 +106,14 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
                 sv->ew_vel = ((raw_ew & 0x3ff) - 1);
                 if (raw_ew & 0x400)
                     sv->ew_vel = 0 - sv->ew_vel;
-                if (sv->airground_state == AIRBORNE_SUPERSONIC)
+                if (sv->airground_state == AG_SUPERSONIC)
                     sv->ew_vel *= 4;
             }
             
             if (sv->ns_vel_valid && sv->ew_vel_valid) {
                 if (sv->ns_vel != 0 || sv->ew_vel != 0) {
                     sv->track_valid = 1;
-                    sv->track_type = AIRBORNE_TRACK;
+                    sv->track_type = TT_TRACK;
                     sv->track = (uint16_t)(360 + 90 - atan2(sv->ns_vel, sv->ew_vel) * 180 / M_PI) % 360;
                 }
                 
@@ -124,7 +124,7 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
             raw_vvel = ((frame[15] & 0x7f) << 4) | ((frame[16] & 0xf0) >> 4);
             if ((raw_vvel & 0x1ff) != 0) {
                 sv->vert_rate_valid = 1;
-                sv->vert_rate_source = (raw_vvel & 0x400) ? BARO : GEO;
+                sv->vert_rate_source = (raw_vvel & 0x400) ? ALT_BARO : ALT_GEO;
                 sv->vert_rate = ((raw_vvel & 0x1ff) - 1) * 64;
                 if (raw_vvel & 0x200)
                     sv->vert_rate = 0 - sv->vert_rate;
@@ -132,7 +132,7 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
         }
         break;
 
-    case GROUND:
+    case AG_GROUND:
         {
             int raw_gs, raw_track;
 
@@ -144,9 +144,9 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
 
             raw_track = ((frame[13] & 0x03) << 9) | (frame[14] << 1) | ((frame[15] & 0x80) >> 7);
             switch ((raw_track & 0x0600)>>9) {
-            case 1: sv->track_valid = 1; sv->track_type = GROUND_TRACK; break;
-            case 2: sv->track_valid = 1; sv->track_type = GROUND_MAG_HEADING; break;
-            case 3: sv->track_valid = 1; sv->track_type = GROUND_TRUE_HEADING; break;
+            case 1: sv->track_valid = 1; sv->track_type = TT_TRACK; break;
+            case 2: sv->track_valid = 1; sv->track_type = TT_MAG_HEADING; break;
+            case 3: sv->track_valid = 1; sv->track_type = TT_TRUE_HEADING; break;
             }
 
             if (sv->track_valid)
@@ -159,7 +159,7 @@ void uat_decode_sv(uint8_t *frame, struct uat_sv *sv)
         }
         break;
 
-    case AIRGROUND_RESERVED:
+    case AG_RESERVED:
         // nothing
         break;
     }
@@ -191,7 +191,7 @@ void uat_display_sv(const struct uat_sv *sv, FILE *to)
         fprintf(to,
                 " Altitude:          %d ft (%s)\n",
                 sv->altitude,
-                sv->altitude_type == BARO ? "barometric" : "geometric");
+                sv->altitude_type == ALT_BARO ? "barometric" : "geometric");
 
     if (sv->ns_vel_valid)
         fprintf(to,
@@ -205,24 +205,19 @@ void uat_display_sv(const struct uat_sv *sv, FILE *to)
 
     if (sv->track_valid) {
         switch (sv->track_type) {
-        case AIRBORNE_TRACK:
+        case TT_TRACK:
             fprintf(to,
                     " Track:             %u\n",
                     sv->track);
             break;
-        case GROUND_TRACK:
+        case TT_MAG_HEADING:
             fprintf(to,
-                    " Ground track:      %u\n",
+                    " Heading:           %u (magnetic)\n",
                     sv->track);
             break;
-        case GROUND_MAG_HEADING:
+        case TT_TRUE_HEADING:
             fprintf(to,
-                    " Ground heading:    %u (magnetic)\n",
-                    sv->track);
-            break;
-        case GROUND_TRUE_HEADING:
-            fprintf(to,
-                    " Ground heading:    %u (true)\n",
+                    " Heading:           %u (true)\n",
                     sv->track);
             break;
         }
@@ -237,7 +232,7 @@ void uat_display_sv(const struct uat_sv *sv, FILE *to)
         fprintf(to,
                 " Vertical rate:     %d ft/min (%s)\n",
                 sv->vert_rate,
-                sv->vert_rate_source == BARO ? "barometric" : "geometric");
+                sv->vert_rate_source == ALT_BARO ? "barometric" : "geometric");
         
     if (sv->lengthwidth_valid)
         fprintf(to,
@@ -292,7 +287,7 @@ void uat_decode_ms(uint8_t *frame, struct uat_ms *ms)
     ms->acas_ra_active = (frame[26] & 0x20 ? 1 : 0);
     ms->ident_active = (frame[26] & 0x10 ? 1 : 0);
     ms->atc_services = (frame[26] & 0x08 ? 1 : 0);
-    ms->heading_type = (frame[26] & 0x04 ? MAGNETIC : TRUE);
+    ms->heading_type = (frame[26] & 0x04 ? HT_MAGNETIC : HT_TRUE);
     ms->callsign_id = (frame[26] & 0x02 ? 1 : 0);
 }
 
@@ -377,7 +372,7 @@ void uat_display_ms(const struct uat_ms *ms, FILE *to)
             ms->nic_baro,
             ms->has_cdti ? "CDTI " : "", ms->has_acas ? "ACAS " : "",
             ms->acas_ra_active ? "ACASRA " : "", ms->ident_active ? "IDENT " : "", ms->atc_services ? "ATC " : "",
-            ms->heading_type == MAGNETIC ? "magnetic heading" : "true heading");
+            ms->heading_type == HT_MAGNETIC ? "magnetic heading" : "true heading");
 }
 
 void uat_decode_auxsv(uint8_t *frame, struct uat_auxsv *auxsv)
@@ -386,7 +381,7 @@ void uat_decode_auxsv(uint8_t *frame, struct uat_auxsv *auxsv)
     if (raw_alt != 0) {
         auxsv->sec_altitude_valid = 1;
         auxsv->sec_altitude = (raw_alt - 1) * 25 - 1000;
-        auxsv->sec_altitude_type = (frame[9] & 1) ? BARO : GEO;
+        auxsv->sec_altitude_type = (frame[9] & 1) ? ALT_BARO : ALT_GEO;
     } else {
         auxsv->sec_altitude_valid = 0;
     }
@@ -402,7 +397,7 @@ void uat_display_auxsv(const struct uat_auxsv *auxsv, FILE *to)
         fprintf(to,
                 " Sec. altitude:     %d ft (%s)\n",                
                 auxsv->sec_altitude,
-                auxsv->sec_altitude_type == BARO ? "barometric" : "geometric");
+                auxsv->sec_altitude_type == ALT_BARO ? "barometric" : "geometric");
     else
         fprintf(to,
                 " Sec. altitude:     unavailable\n");

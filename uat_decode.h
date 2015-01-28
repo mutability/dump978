@@ -28,8 +28,8 @@
 //
 
 // A decoded Header element
-typedef enum { ADSB_ICAO=0, NATIONAL=1, TISB_ICAO=2, TISB_OTHER=3, VEHICLE=4,
-               FIXED_BEACON=5, RESERVED_6=6, RESERVED_7=7 } address_qualifier_t;
+typedef enum { AQ_ADSB_ICAO=0, AQ_NATIONAL=1, AQ_TISB_ICAO=2, AQ_TISB_OTHER=3, AQ_VEHICLE=4,
+               AQ_FIXED_BEACON=5, AQ_RESERVED_6=6, AQ_RESERVED_7=7 } address_qualifier_t;
 
 struct uat_hdr {
     uint8_t mdb_type;
@@ -37,9 +37,9 @@ struct uat_hdr {
     uint32_t address;
 };
 
-typedef enum { BARO, GEO } altitude_type_t;
-typedef enum { AIRBORNE_SUBSONIC=0, AIRBORNE_SUPERSONIC=1, GROUND=2, AIRGROUND_RESERVED=3 } airground_state_t;
-typedef enum { AIRBORNE_TRACK, GROUND_TRACK, GROUND_MAG_HEADING, GROUND_TRUE_HEADING } track_type_t;
+typedef enum { ALT_BARO, ALT_GEO } altitude_type_t;
+typedef enum { AG_SUBSONIC=0, AG_SUPERSONIC=1, AG_GROUND=2, AG_RESERVED=3 } airground_state_t;
+typedef enum { TT_TRACK, TT_MAG_HEADING, TT_TRUE_HEADING } track_type_t;
 
 // A decoded State Vector element (TIS-B or ADS-B)
 struct uat_sv {
@@ -92,7 +92,7 @@ struct uat_sv {
 
 // A decoded Mode Status element
 
-typedef enum { MAGNETIC, TRUE } heading_type_t;
+typedef enum { HT_MAGNETIC, HT_TRUE } heading_type_t;
 struct uat_ms {    
     uint8_t emitter_category;
     char callsign[9];

@@ -357,7 +357,7 @@ static void generate_esnt(struct uat_adsb_mdb *mdb)
                                    mdb->hdr.address,
                                    encode_altitude(mdb->sv.altitude_valid, mdb->sv.altitude),
                                    0, 0, 0);
-    } else if (mdb->sv.airground_state == GROUND) {
+    } else if (mdb->sv.airground_state == AG_GROUND) {
         generate_esnt_ground_position(8,
                                       mdb->hdr.address,
                                       encode_cpr_lat(mdb->sv.lat, mdb->sv.lon, 0, 1),
@@ -388,7 +388,7 @@ static void generate_esnt(struct uat_adsb_mdb *mdb)
                                    1);
 
         if (mdb->sv.ns_vel_valid || mdb->sv.ew_vel_valid || mdb->sv.vert_rate_valid) {
-            int supersonic = (mdb->sv.airground_state == AIRBORNE_SUPERSONIC);
+            int supersonic = (mdb->sv.airground_state == AG_SUPERSONIC);
             generate_esnt_air_velocity(19,
                                        supersonic ? 2 : 1,
                                        mdb->hdr.address,

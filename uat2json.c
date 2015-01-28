@@ -87,7 +87,7 @@ static struct aircraft *find_or_create_aircraft(uint32_t address)
 
     a = calloc(1, sizeof(*a));
     a->address = address;
-    a->airground_state = AIRGROUND_RESERVED;
+    a->airground_state = AG_RESERVED;
 
     a->next = aircraft_list;
     aircraft_list = a;
@@ -118,8 +118,8 @@ static void process_mdb(struct uat_adsb_mdb *mdb)
     ++message_count;
 
     switch (mdb->hdr.address_qualifier) {
-    case ADSB_ICAO:
-    case TISB_ICAO:        
+    case AQ_ADSB_ICAO:
+    case AQ_TISB_ICAO:
         addr = mdb->hdr.address;
         break;
 
