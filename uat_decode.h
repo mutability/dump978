@@ -27,37 +27,41 @@
 // Datatypes
 //
 
-// A decoded Header element
 typedef enum { AQ_ADSB_ICAO=0, AQ_NATIONAL=1, AQ_TISB_ICAO=2, AQ_TISB_OTHER=3, AQ_VEHICLE=4,
                AQ_FIXED_BEACON=5, AQ_RESERVED_6=6, AQ_RESERVED_7=7 } address_qualifier_t;
+typedef enum { ALT_INVALID=0, ALT_BARO, ALT_GEO } altitude_type_t;
+typedef enum { AG_SUBSONIC=0, AG_SUPERSONIC=1, AG_GROUND=2, AG_RESERVED=3 } airground_state_t;
+typedef enum { TT_INVALID=0, TT_TRACK, TT_MAG_HEADING, TT_TRUE_HEADING } track_type_t;
+typedef enum { HT_INVALID=0, HT_MAGNETIC, HT_TRUE } heading_type_t;
+typedef enum { CS_INVALID=0, CS_CALLSIGN, CS_SQUAWK } callsign_type_t;
 
-struct uat_hdr {
+struct uat_adsb_mdb {
+    // presence bits
+    int has_sv : 1;
+    int has_ms : 1;
+    int has_auxsv : 1;
+
+    int position_valid : 1;
+    int ns_vel_valid : 1;
+    int ew_vel_valid : 1;
+    int speed_valid : 1;
+    int dimensions_valid : 1;
+
+    //
+    // HDR
+    //
     uint8_t mdb_type;
     address_qualifier_t address_qualifier;
     uint32_t address;
-};
 
-typedef enum { ALT_BARO, ALT_GEO } altitude_type_t;
-typedef enum { AG_SUBSONIC=0, AG_SUPERSONIC=1, AG_GROUND=2, AG_RESERVED=3 } airground_state_t;
-typedef enum { TT_TRACK, TT_MAG_HEADING, TT_TRUE_HEADING } track_type_t;
-
-// A decoded State Vector element (TIS-B or ADS-B)
-struct uat_sv {
-    // validity bits:
-    int position_valid : 1;
-    int altitude_valid : 1;
-    int ns_vel_valid : 1;
-    int ew_vel_valid : 1;
-    int track_valid : 1;
-    int speed_valid : 1;
-    int vert_rate_valid : 1;
-    int lengthwidth_valid : 1;
+    //
+    // SV
+    //
 
     // if position_valid:
     double lat;
     double lon;
 
-    // if altitude_valid:
     altitude_type_t altitude_type;
     int32_t altitude; // in feet
     
@@ -70,16 +74,14 @@ struct uat_sv {
     // if ew_vel_valid:
     int16_t ew_vel; // in kts
     
-    // if track_valid:
     track_type_t track_type;
     uint16_t track;
 
     // if speed_valid:
     uint16_t speed; // in kts
 
-    // if vert_rate_valid:
-    int16_t vert_rate; // in ft/min
     altitude_type_t vert_rate_source;
+    int16_t vert_rate; // in ft/min
 
     // if lengthwidth_valid:
     double length; // in meters (just to be different)
@@ -88,13 +90,13 @@ struct uat_sv {
 
     int utc_coupled : 1;      // true if UTC Coupled flag is set (ADS-B)
     uint8_t tisb_site_id;     // TIS-B site ID, or zero in ADS-B messages
-};
+    
+    //
+    // MS
+    //
 
-// A decoded Mode Status element
-
-typedef enum { HT_MAGNETIC, HT_TRUE } heading_type_t;
-struct uat_ms {    
     uint8_t emitter_category;
+    callsign_type_t callsign_type;
     char callsign[9];
     uint8_t emergency_status;
     uint8_t uat_version;
@@ -112,41 +114,19 @@ struct uat_ms {
     int ident_active : 1;
     int atc_services : 1;
 
-    int callsign_id : 1;    
     heading_type_t heading_type;
-};
 
-// A decoded Auxiliary Status element
+    //
+    // AUXSV
 
-struct uat_auxsv {
-    int sec_altitude_valid : 1;
     altitude_type_t sec_altitude_type;
     int32_t sec_altitude; // in feet
-};
-
-struct uat_adsb_mdb {
-    int sv_valid : 1;
-    int ms_valid : 1;
-    int auxsv_valid : 1;
-
-    struct uat_hdr hdr;
-    struct uat_sv sv;
-    struct uat_ms ms;
-    struct uat_auxsv auxsv;
 };
 
 //
 // Decode/display prototypes
 //
 
-void uat_decode_hdr(uint8_t *frame, struct uat_hdr *hdr);
-void uat_display_hdr(const struct uat_hdr *hdr, FILE *to);
-void uat_decode_sv(uint8_t *frame, struct uat_sv *sv);
-void uat_display_sv(const struct uat_sv *sv, FILE *to);
-void uat_decode_ms(uint8_t *frame, struct uat_ms *ms);
-void uat_display_ms(const struct uat_ms *ms, FILE *to);
-void uat_decode_auxsv(uint8_t *frame, struct uat_auxsv *auxsv);
-void uat_display_auxsv(const struct uat_auxsv *auxsv, FILE *to);
 void uat_decode_adsb_mdb(uint8_t *frame, struct uat_adsb_mdb *mdb);
 void uat_display_adsb_mdb(const struct uat_adsb_mdb *mdb, FILE *to);
 

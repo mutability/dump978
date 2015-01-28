@@ -117,14 +117,14 @@ static void process_mdb(struct uat_adsb_mdb *mdb)
     
     ++message_count;
 
-    switch (mdb->hdr.address_qualifier) {
+    switch (mdb->address_qualifier) {
     case AQ_ADSB_ICAO:
     case AQ_TISB_ICAO:
-        addr = mdb->hdr.address;
+        addr = mdb->address;
         break;
 
     default:
-        addr = mdb->hdr.address | NON_ICAO_ADDRESS;
+        addr = mdb->address | NON_ICAO_ADDRESS;
         break;
     }
    
@@ -133,54 +133,46 @@ static void process_mdb(struct uat_adsb_mdb *mdb)
     ++a->messages;
     
     // copy state into aircraft
-    if (mdb->sv_valid) {
-        a->airground_state = mdb->sv.airground_state;
+    if (mdb->airground_state != AG_RESERVED)
+        a->airground_state = mdb->airground_state;
 
-        if (mdb->sv.position_valid) {
-            a->position_valid = 1;
-            a->lat = mdb->sv.lat;
-            a->lon = mdb->sv.lon;
-            a->last_seen_pos = NOW;
-        }
+    if (mdb->position_valid) {
+        a->position_valid = 1;
+        a->lat = mdb->lat;
+        a->lon = mdb->lon;
+        a->last_seen_pos = NOW;
+    }
         
-        if (mdb->sv.altitude_valid) {
-            a->altitude_valid = 1;
-            a->altitude = mdb->sv.altitude;
-        }
+    if (mdb->altitude_type != ALT_INVALID) {
+        a->altitude_valid = 1;
+        a->altitude = mdb->altitude;
+    }
 
-        if (mdb->sv.track_valid) {
-            a->track_valid = 1;
-            a->track = mdb->sv.track;
-        }
+    if (mdb->track_type != TT_INVALID) {
+        a->track_valid = 1;
+        a->track = mdb->track;
+    }
 
-        if (mdb->sv.speed_valid) {
-            a->speed_valid = 1;
-            a->speed = mdb->sv.speed;
-        }
-
-        if (mdb->sv.vert_rate_valid) {
-            a->vert_rate_valid = 1;
-            a->vert_rate = mdb->sv.vert_rate;
-        }
+    if (mdb->speed_valid) {
+        a->speed_valid = 1;
+        a->speed = mdb->speed;
     }
     
-    if (mdb->ms_valid) {
-        if (mdb->ms.callsign[0]) {
-            if (mdb->ms.callsign_id)
-                strcpy(a->callsign, mdb->ms.callsign);
-            else
-                strcpy(a->squawk, mdb->ms.callsign);
-        }
+    if (mdb->vert_rate_source != ALT_INVALID) {
+        a->vert_rate_valid = 1;
+        a->vert_rate = mdb->vert_rate;
     }
+    
+    if (mdb->callsign_type == CS_CALLSIGN)
+        strcpy(a->callsign, mdb->callsign);
+    else if (mdb->callsign_type == CS_SQUAWK)
+        strcpy(a->squawk, mdb->callsign);
 
-    if (mdb->auxsv_valid) {
-        if (mdb->auxsv.sec_altitude_valid) {
-            // only use secondary if no primary is available
-            if ((!mdb->sv_valid && !a->altitude_valid) ||
-                (mdb->sv_valid && !mdb->sv.altitude_valid)) {
-                a->altitude_valid = 1;
-                a->altitude = mdb->auxsv.sec_altitude;
-            }
+    if (mdb->sec_altitude_type != ALT_INVALID) {
+        // only use secondary if no primary is available
+        if (!a->altitude_valid || mdb->altitude_type == ALT_INVALID) {
+            a->altitude_valid = 1;
+            a->altitude = mdb->sec_altitude;
         }
     }
 }
