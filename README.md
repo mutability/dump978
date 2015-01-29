@@ -68,3 +68,28 @@ $ rtl_sdr -f 978000000 -s 2083334 -g 48 - | \
 ````
 
 5) Go look at http://localhost/dump978map/
+
+## uat2esnt: convert UAT ADS-B messages to Mode S ADS-B messages.
+
+Warning: This one is particularly experimental.
+
+uat2esnt accepts 978MHz UAT downlink messages on stdin and
+generates 1090MHz Extended Squitter messages on stdout.
+
+The generated messages mostly use DF18 with CF=6, which is
+for rebroadcasts of ADS-B messages (ADS-R).
+
+The output format is the "AVR" text format; this can be
+fed to dump1090 on port 30001 by default. Other ADS-B tools
+may accept it too - e.g. VRS seems to accept most of it (though
+it ignores DF18 CF=5 messages which are generated for
+non-ICAO-address callsign/squawk information.
+
+You'll want a pipeline like this:
+
+````
+$ rtl_sdr -f 978000000 -s 2083334 -g 48 - | \
+  ./dump978 | \
+  ./uat2esnt | \
+  nc -q1 localhost 30001
+````
