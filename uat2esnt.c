@@ -24,7 +24,7 @@
 #include "uat_decode.h"
 #include "reader.h"
 
-static void checksum_and_send(uint8_t *esnt_frame);
+static void checksum_and_send(uint8_t *frame, int len, uint32_t parity);
 
 // If you call this with constants for firstbit/lastbit
 // gcc will do a pretty good job of crunching it down
@@ -222,6 +222,21 @@ static int encode_cpr_lon(double lat, double lon, int odd, int surface)
     return XZ & 0x1FFFF; // always a 17-bit field
 }
 
+static int encode_imf(struct uat_adsb_mdb *mdb)
+{
+    // Encode the IMF bit for DF 18; this is 0 if the address
+    // is a regular 24-bit ICAO address, or 1 if it uses a
+    // different format.
+    switch (mdb->address_qualifier) {
+    case AQ_ADSB_ICAO:
+    case AQ_TISB_ICAO:
+        return 0;
+
+    default:
+        return 1;
+    }
+}
+
 static void send_altitude_only(struct uat_adsb_mdb *mdb)
 {
     uint8_t esnt_frame[14];
@@ -237,20 +252,20 @@ static void send_altitude_only(struct uat_adsb_mdb *mdb)
     }
 
     setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 5);                  // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
     setbits(esnt_frame, 9, 32, mdb->address);      // AA
 
     // ES:
     setbits(esnt_frame+4, 1, 5, 0);                // FORMAT TYPE CODE = 0, barometric altitude with no position
     setbits(esnt_frame+4, 6, 7, 0);                // SURVEILLANCE STATUS normal
-    setbits(esnt_frame+4, 8, 8, 0);                // SINGLE ANTENNA FLAG
+    setbits(esnt_frame+4, 8, 8, encode_imf(mdb));  // IMF
     setbits(esnt_frame+4, 9, 20, raw_alt);         // ALTITUDE
     setbits(esnt_frame+4, 21, 21, 0);              // TIME (T)
     setbits(esnt_frame+4, 22, 22, 0);              // CPR FORMAT (F)
     setbits(esnt_frame+4, 23, 39, 0);              // ENCODED LATITUDE
     setbits(esnt_frame+4, 40, 56, 0);              // ENCODED LONGITUDE
 
-    checksum_and_send(esnt_frame);
+    checksum_and_send(esnt_frame, 14, 0);
 }
 
 static void maybe_send_surface_position(struct uat_adsb_mdb *mdb)
@@ -261,7 +276,7 @@ static void maybe_send_surface_position(struct uat_adsb_mdb *mdb)
         return; // nope!
 
     setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 5);                  // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
     setbits(esnt_frame, 9, 32, mdb->address);      // AA
 
     setbits(esnt_frame+4, 1, 5, 8);                                            // FORMAT TYPE CODE = 8, surface position (NUCp=6)
@@ -280,19 +295,19 @@ static void maybe_send_surface_position(struct uat_adsb_mdb *mdb)
         setbits(esnt_frame+4, 14, 20, mdb->track * 128 / 360);                 // GROUND TRACK (TRUE)
     }
 
-    setbits(esnt_frame+4, 21, 21, 0);                                          // TIME (T)
+    setbits(esnt_frame+4, 21, 21, encode_imf(mdb));                            // IMF
 
     // even frame:
     setbits(esnt_frame+4, 22, 22, 0);                                          // CPR FORMAT (F) = even
     setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 0, 1));   // ENCODED LATITUDE
     setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 0, 1));   // ENCODED LONGITUDE
-    checksum_and_send(esnt_frame);
+    checksum_and_send(esnt_frame, 14, 0);
 
     // odd frame:
     setbits(esnt_frame+4, 22, 22, 1);                                          // CPR FORMAT (F) = odd
     setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 1, 1));   // ENCODED LATITUDE
     setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 1, 1));   // ENCODED LONGITUDE
-    checksum_and_send(esnt_frame);
+    checksum_and_send(esnt_frame, 14, 0);
 }
 
 static void maybe_send_air_position(struct uat_adsb_mdb *mdb)
@@ -309,7 +324,7 @@ static void maybe_send_air_position(struct uat_adsb_mdb *mdb)
     }        
 
     setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 6, 8, 6);             // CF=6,  ADS-R
     setbits(esnt_frame, 9, 32, mdb->address); // AA
 
     // decide on a metype
@@ -331,21 +346,21 @@ static void maybe_send_air_position(struct uat_adsb_mdb *mdb)
     }
 
     setbits(esnt_frame+4, 6, 7, 0);                // SURVEILLANCE STATUS normal
-    setbits(esnt_frame+4, 8, 8, 0);                // SINGLE ANTENNA FLAG
+    setbits(esnt_frame+4, 8, 8, encode_imf(mdb));  // IMF
     setbits(esnt_frame+4, 9, 20, raw_alt);         // ALTITUDE
     setbits(esnt_frame+4, 21, 21, 0);              // TIME (T)
 
     // even frame:
-    setbits(esnt_frame+4, 22, 22, 0);                                                     // CPR FORMAT (F) - even
+    setbits(esnt_frame+4, 22, 22, 0);                                               // CPR FORMAT (F) - even
     setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 0, 0));        // ENCODED LATITUDE
     setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 0, 0));        // ENCODED LONGITUDE
-    checksum_and_send(esnt_frame);
+    checksum_and_send(esnt_frame, 14, 0);
 
     // odd frame:
-    setbits(esnt_frame+4, 22, 22, 1);                                                     // CPR FORMAT (F) - odd
+    setbits(esnt_frame+4, 22, 22, 1);                                               // CPR FORMAT (F) - odd
     setbits(esnt_frame+4, 23, 39, encode_cpr_lat(mdb->lat, mdb->lon, 1, 0));        // ENCODED LATITUDE
     setbits(esnt_frame+4, 40, 56, encode_cpr_lon(mdb->lat, mdb->lon, 1, 0));        // ENCODED LONGITUDE
-    checksum_and_send(esnt_frame);
+    checksum_and_send(esnt_frame, 14, 0);
 }
 
 static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
@@ -362,7 +377,7 @@ static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
     }
 
     setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
+    setbits(esnt_frame, 6, 8, 6);             // CF=6,  ADS-R
     setbits(esnt_frame, 9, 32, mdb->address); // AA
 
     supersonic = (mdb->airground_state == AG_SUPERSONIC);
@@ -372,8 +387,8 @@ static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
     else
         setbits(esnt_frame+4, 6, 8, 1);            // SUBTYPE = 1, subsonic, speed over ground
 
-    setbits(esnt_frame+4, 9, 9, 0);                // INTENT CHANGE FLAG
-    setbits(esnt_frame+4, 10, 10, 0);              // IFR CAPABILITY FLAG
+    setbits(esnt_frame+4, 9, 9, encode_imf(mdb));  // IMF
+    setbits(esnt_frame+4, 10, 10, 0);              // IFR
     setbits(esnt_frame+4, 11, 13, 0);              // NAVIGATIONAL UNCERTAINTY CATEGORY FOR VELOCITY
 
     // EAST/WEST DIRECTION BIT + EAST/WEST VELOCITY
@@ -390,18 +405,18 @@ static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
 
     switch (mdb->vert_rate_source) {
     case ALT_BARO:
-        setbits(esnt_frame+4, 36, 36, 0);                                 // SOURCE BIT FOR VERTICAL RATE = 0, barometric
+        setbits(esnt_frame+4, 36, 36, 0);                                 // SOURCE = BARO
         setbits(esnt_frame+4, 37, 46, encode_vert_rate(mdb->vert_rate));  // SIGN BIT FOR VERTICAL RATE + VERTICAL RATE
         break;
 
     case ALT_GEO:
-        setbits(esnt_frame+4, 36, 36, 1);                                 // SOURCE BIT FOR VERTICAL RATE = 1, GNSS
+        setbits(esnt_frame+4, 36, 36, 1);                                 // SOURCE = GNSS
         setbits(esnt_frame+4, 37, 46, encode_vert_rate(mdb->vert_rate));  // SIGN BIT FOR VERTICAL RATE + VERTICAL RATE
         break;
 
     default:
-        setbits(esnt_frame+4, 36, 36, 0);                                 // SOURCE BIT FOR VERTICAL RATE = 0, barometric
-        setbits(esnt_frame+4, 37, 46, 0);                                 // SIGN BIT FOR VERTICAL RATE + VERTICAL RATE = 0, invalid
+        setbits(esnt_frame+4, 36, 36, 0);                                 // SOURCE = BARO
+        setbits(esnt_frame+4, 37, 46, 0);                                 // SIGN BIT FOR VERTICAL RATE + VERTICAL RATE = 0, no information
         break;
     }
 
@@ -417,17 +432,17 @@ static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
             delta = mdb->altitude - mdb->sec_altitude;
             sign = mdb->altitude_type == ALT_BARO ? 1 : 0;
         }
-        
+
         delta = delta / 25 + 1;
         if (delta >= 127) delta = 127;
-        setbits(esnt_frame+4, 49, 49, sign);              // GNSS ALT SIGN BIT
+        setbits(esnt_frame+4, 49, 49, sign);              // DIFFERENCE SIGN BIT
         setbits(esnt_frame+4, 50, 56, delta);             // GNSS ALT DIFFERENCE FROM BARO ALT
     } else {
-        setbits(esnt_frame+4, 49, 49, 0);                 // GNSS ALT SIGN BIT
-        setbits(esnt_frame+4, 50, 56, 0);                 // GNSS ALT DIFFERENCE FROM BARO ALT = 0, invalid
+        setbits(esnt_frame+4, 49, 49, 0);                 // DIFFERENCE SIGN BIT
+        setbits(esnt_frame+4, 50, 56, 0);                 // GNSS ALT DIFFERENCE FROM BARO ALT = 0, no information
     }
 
-    checksum_and_send(esnt_frame);
+    checksum_and_send(esnt_frame, 14, 0);
 }
 
 // yeah, this could be done with a lookup table, meh.
@@ -472,11 +487,15 @@ static unsigned encodeSquawk(char *squawkStr)
 static void maybe_send_callsign(struct uat_adsb_mdb *mdb)
 {
     uint8_t esnt_frame[14];
+    int imf = encode_imf(mdb);
 
+    // NB: we choose a CF value based on the address type (IMF value);
+    // we shouldn't send CF=6 with no IMF bit for non-ICAO addresses
+    // (see doc 9871 B.3.4.3)
     switch (mdb->callsign_type) {
     case CS_CALLSIGN:
         setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
-        setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
+        setbits(esnt_frame, 6, 8, imf ? 5 : 6);   // CF=6 for ICAO, CF=5 for non-ICAO
         setbits(esnt_frame, 9, 32, mdb->address); // AA
 
         if (mdb->emitter_category <= 7) {
@@ -506,19 +525,32 @@ static void maybe_send_callsign(struct uat_adsb_mdb *mdb)
         setbits(esnt_frame+4, 39, 44, char_to_ais(mdb->callsign[5]));
         setbits(esnt_frame+4, 45, 50, char_to_ais(mdb->callsign[6]));
         setbits(esnt_frame+4, 51, 56, char_to_ais(mdb->callsign[7]));
-        checksum_and_send(esnt_frame);
+        checksum_and_send(esnt_frame, 14, 0);
         break;
 
     case CS_SQUAWK:
-        setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
-        setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
-        setbits(esnt_frame, 9, 32, mdb->address); // AA
+        if (imf) {
+            // Non-ICAO address, send as DF18 "test message"
+            setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
+            setbits(esnt_frame, 6, 8, 5);             // CF=5, TIS-B retransmission with non-ICAO address
+            setbits(esnt_frame, 9, 32, mdb->address); // AA
 
-        setbits(esnt_frame+4, 1, 5, 23);                           // FORMAT TYPE CODE = 23, test message
-        setbits(esnt_frame+4, 6, 8, 7);                            // subtype = 7, squawk
-        setbits(esnt_frame+4, 9, 21, encodeSquawk(mdb->callsign));
+            setbits(esnt_frame+4, 1, 5, 23);                           // FORMAT TYPE CODE = 23, test message
+            setbits(esnt_frame+4, 6, 8, 7);                            // subtype = 7, squawk
+            setbits(esnt_frame+4, 9, 21, encodeSquawk(mdb->callsign));
 
-        checksum_and_send(esnt_frame);
+            checksum_and_send(esnt_frame, 14, 0);
+        } else {
+            // ICAO address, send as DF5
+            setbits(esnt_frame, 1, 5, 5);            // DF=5, Surveillance Identity Reply
+            setbits(esnt_frame, 6, 8, 0);            // Flight Status
+            setbits(esnt_frame, 9, 13, 0);           // Downlink Request
+            setbits(esnt_frame, 14, 19, 0);          // Utility Message
+            setbits(esnt_frame, 20, 32, encodeSquawk(mdb->callsign)); // Identity
+
+            checksum_and_send(esnt_frame, 7, mdb->address); // put address in checksum (Address/Parity)
+        }
+
         break;
 
     default:
@@ -563,18 +595,18 @@ static uint32_t checksum(uint8_t *message, int n)
     return rem;
 }
 
-static void checksum_and_send(uint8_t *esnt_frame)
+static void checksum_and_send(uint8_t *frame, int len, uint32_t parity)
 {
     int j;
-    uint32_t rem = checksum(esnt_frame, 11);
+    uint32_t rem = checksum(frame, len-3) ^ parity;
 
-    esnt_frame[11] = (rem & 0xFF0000) >> 16;
-    esnt_frame[12] = (rem & 0x00FF00) >> 8;
-    esnt_frame[13] = (rem & 0x0000FF);
+    frame[len-3] = (rem & 0xFF0000) >> 16;
+    frame[len-2] = (rem & 0x00FF00) >> 8;
+    frame[len-1] = (rem & 0x0000FF);
 
     fprintf(stdout, "*");
-    for (j = 0; j < 14; j++)
-        fprintf(stdout, "%02X", esnt_frame[j]);
+    for (j = 0; j < len; j++)
+        fprintf(stdout, "%02X", frame[j]);
     fprintf(stdout, ";\n");
     fflush(stdout);
 }
