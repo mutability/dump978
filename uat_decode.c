@@ -313,30 +313,30 @@ static void uat_decode_ms(uint8_t *frame, struct uat_adsb_mdb *mdb)
 }
 
 static const char *emitter_category_names[40] = {
-    "No information",                          // 0
+    "No information",                          // A0
     "Light <= 7000kg",
     "Medium Wake 7000-34000kg",
     "Medium Wake 34000-136000kg",
-    "Medium Wake High Vortex 34000-136000kg",  // 4
+    "Medium Wake High Vortex 34000-136000kg",
     "Heavy >= 136000kg",
     "Highly Maneuverable",
-    "Rotorcraft",
-    "reserved (8)",                            // 8
+    "Rotorcraft",                              // A7
+    "reserved (8)",                            // B0
     "Glider/Sailplane",
     "Lighter than air",
     "Parachutist / sky diver",
-    "Ultra light / hang glider / paraglider",  // 12
+    "Ultra light / hang glider / paraglider",
     "reserved (13)",
     "UAV",
-    "Space / transatmospheric",
-    "reserved (16)",                           // 16
+    "Space / transatmospheric",                // B7
+    "reserved (16)",                           // C0
     "Emergency vehicle",
     "Service vehicle",
     "Point obstacle",
-    "Cluster obstacle",                        // 20
+    "Cluster obstacle",
     "Line obstacle",
     "reserved (22)",
-    "reserved (23)",
+    "reserved (23)",                           // C7
     "reserved (24)",
     "reserved (25)",
     "reserved (26)",
