@@ -16,7 +16,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "uat.h"
 #include "uat_decode.h"
@@ -428,9 +430,100 @@ static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
     checksum_and_send(esnt_frame);
 }
 
+// yeah, this could be done with a lookup table, meh.
+static char *ais_charset = "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?";
+static uint8_t char_to_ais(int ch)
+{
+    char *match;
+    if (!ch)
+        return 32;
+
+    match = strchr(ais_charset, ch);
+    if (match)
+        return (uint8_t)(match - ais_charset);
+    else
+        return 32;
+}
+
+static unsigned encodeSquawk(char *squawkStr)
+{
+    unsigned squawk = strtoul(squawkStr, NULL, 16);
+    unsigned encoded = 0;
+
+    if (squawk & 0x1000) encoded |= 0x0800; // A1
+    if (squawk & 0x2000) encoded |= 0x0200; // A2
+    if (squawk & 0x4000) encoded |= 0x0080; // A4
+
+    if (squawk & 0x0100) encoded |= 0x0020; // B1
+    if (squawk & 0x0200) encoded |= 0x0008; // B2
+    if (squawk & 0x0400) encoded |= 0x0002; // B4
+
+    if (squawk & 0x0010) encoded |= 0x1000; // C1
+    if (squawk & 0x0020) encoded |= 0x0400; // C2
+    if (squawk & 0x0040) encoded |= 0x0100; // C4
+
+    if (squawk & 0x0001) encoded |= 0x0010; // D1
+    if (squawk & 0x0002) encoded |= 0x0004; // D2
+    if (squawk & 0x0004) encoded |= 0x0001; // D4
+
+    return encoded;
+}
+
 static void maybe_send_callsign(struct uat_adsb_mdb *mdb)
 {
-    // TODO
+    uint8_t esnt_frame[14];
+
+    switch (mdb->callsign_type) {
+    case CS_CALLSIGN:
+        setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
+        setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
+        setbits(esnt_frame, 9, 32, mdb->address); // AA
+
+        if (mdb->emitter_category <= 7) {
+            setbits(esnt_frame+4, 1, 5, 4);                         // FORMAT TYPE CODE = 4, aircraft category A
+            setbits(esnt_frame+4, 6, 8, mdb->emitter_category & 7); // AIRCRAFT CATEGORY (A0 - A7)
+        } else if (mdb->emitter_category <= 15) {
+            setbits(esnt_frame+4, 1, 5, 3);                         // FORMAT TYPE CODE = 3, aircraft category B
+            setbits(esnt_frame+4, 6, 8, mdb->emitter_category & 7); // AIRCRAFT CATEGORY (B0 - B7)
+        } else if (mdb->emitter_category <= 23) {
+            setbits(esnt_frame+4, 1, 5, 2);                         // FORMAT TYPE CODE = 2, aircraft category C
+            setbits(esnt_frame+4, 6, 8, mdb->emitter_category & 7); // AIRCRAFT CATEGORY (C0 - C7)
+        } else if (mdb->emitter_category <= 31) {
+            setbits(esnt_frame+4, 1, 5, 1);                         // FORMAT TYPE CODE = 1, aircraft category D
+            setbits(esnt_frame+4, 6, 8, mdb->emitter_category & 7); // AIRCRAFT CATEGORY (D0 - D7)
+        } else {
+            // reserved, map to A0
+            setbits(esnt_frame+4, 1, 5, 4);                         // FORMAT TYPE CODE = 4, aircraft category A
+            setbits(esnt_frame+4, 6, 8, 0);                         // AIRCRAFT CATEGORY A0
+        }
+
+        // Map callsign
+        setbits(esnt_frame+4, 9, 14, char_to_ais(mdb->callsign[0]));
+        setbits(esnt_frame+4, 15, 20, char_to_ais(mdb->callsign[1]));
+        setbits(esnt_frame+4, 21, 26, char_to_ais(mdb->callsign[2]));
+        setbits(esnt_frame+4, 27, 32, char_to_ais(mdb->callsign[3]));
+        setbits(esnt_frame+4, 33, 38, char_to_ais(mdb->callsign[4]));
+        setbits(esnt_frame+4, 39, 44, char_to_ais(mdb->callsign[5]));
+        setbits(esnt_frame+4, 45, 50, char_to_ais(mdb->callsign[6]));
+        setbits(esnt_frame+4, 51, 56, char_to_ais(mdb->callsign[7]));
+        checksum_and_send(esnt_frame);
+        break;
+
+    case CS_SQUAWK:
+        setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
+        setbits(esnt_frame, 6, 8, 5);             // CF=5,  TIS-B relay of ADS-B message with other address
+        setbits(esnt_frame, 9, 32, mdb->address); // AA
+
+        setbits(esnt_frame+4, 1, 5, 23);                           // FORMAT TYPE CODE = 23, test message
+        setbits(esnt_frame+4, 6, 8, 7);                            // subtype = 7, squawk
+        setbits(esnt_frame+4, 9, 21, encodeSquawk(mdb->callsign));
+
+        checksum_and_send(esnt_frame);
+        break;
+
+    default:
+        break;
+    }
 }
 
 // Generator polynomial for the Mode S CRC:
