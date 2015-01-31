@@ -8,7 +8,7 @@ all: dump978 uat2json uat2text uat2esnt
 %.o: %.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-dump978: dump978.o uat_decode.o fec/decode_rs_char.o fec/init_rs_char.o
+dump978: dump978.o fec/decode_rs_char.o fec/init_rs_char.o
 	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
 
 uat2json: uat2json.o uat_decode.o reader.o
