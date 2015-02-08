@@ -153,8 +153,67 @@ void read_from_stdin()
     }
 }
 
-// maximum number of bit errors to permit in the sync word
-#define MAX_SYNC_ERRORS 2
+
+// Return 1 if word is "equal enough" to expected
+static inline int sync_word_fuzzy_compare(uint64_t word, uint64_t expected)
+{
+    uint64_t diff;
+
+    if (word == expected)
+        return 1;
+
+    diff = word ^ expected; // guaranteed nonzero
+
+    // This is a bit-twiddling popcount
+    // hack, tweaked as we only care about
+    // "<N" or ">=N" set bits for fixed N -
+    // so we can bail out early after seeing N
+    // set bits.
+    //
+    // It relies on starting with a nonzero value
+    // with zero or more trailing clear bits
+    // after the last set bit:
+    //
+    //    010101010101010000
+    //                 ^
+    // Subtracting one, will flip the 
+    // bits starting at the last set bit:
+    //
+    //    010101010101001111
+    //                 ^
+    // then we can use that as a bitwise-and 
+    // mask to clear the lowest set bit:
+    //
+    //    010101010101000000
+    //                 ^
+    // And repeat until the value is zero
+    // or we have seen too many set bits.
+    
+    // >= 1 bit
+    diff &= (diff-1);   // clear lowest set bit
+    if (!diff)
+        return 1; // 1 bit error
+
+    // >= 2 bits
+    diff &= (diff-1);   // clear lowest set bit
+    if (!diff)
+        return 1; // 2 bits error
+
+    // >= 3 bits
+    diff &= (diff-1);   // clear lowest set bit
+    if (!diff)
+        return 1; // 3 bits error
+
+    // >= 4 bits
+    diff &= (diff-1);   // clear lowest set bit
+    if (!diff)
+        return 1; // 4 bits error
+
+    // > 4 bits in error, give up
+    return 0;
+}
+
+#define MAX_SYNC_ERRORS 4
 
 // check that there is a valid sync word starting at 'phi'
 // that matches the sync word 'pattern'. Place the dphi
@@ -172,7 +231,7 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
     // find mean dphi for zero and one bits;
     // take the mean of the two as our central value
 
-    for (i = 0; i < 36; ++i) {
+    for (i = 0; i < SYNC_BITS; ++i) {
         int16_t dphi = phi_difference(phi[i*2], phi[i*2+1]);
 
         if (pattern & (1UL << (35-i))) {
@@ -191,7 +250,7 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
 
     // recheck sync word using our center value
     error_bits = 0;
-    for (i = 0; i < 36; ++i) {
+    for (i = 0; i < SYNC_BITS; ++i) {
         int16_t dphi = phi_difference(phi[i*2], phi[i*2+1]);
 
         if (pattern & (1UL << (35-i))) {
@@ -207,6 +266,8 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
 
     return (error_bits <= MAX_SYNC_ERRORS);
 }
+
+#define SYNC_MASK ((1UL<<SYNC_BITS)-1)
 
 int process_buffer(uint16_t *phi, int len, uint64_t offset)    
 {
@@ -235,27 +296,15 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
     // ensure we don't consume any partial sync word we might be part-way
     // through. This means we don't need to maintain state between calls.
 
-    // We actually only look for the first CHECK_BITS of the sync word here.
-    // If there's a match, the frame demodulators will derive a center offset
-    // from the full word and then use that to re-check the sync word. This
-    // lets us grab a few more marginal frames.
-
-    // 18 seems like a good tradeoff between recovering more frames
-    // and excessive false positives
-#define CHECK_BITS 18
-#define CHECK_MASK ((1UL<<CHECK_BITS)-1)
-#define CHECK_ADSB (ADSB_SYNC_WORD >> (SYNC_BITS-CHECK_BITS))
-#define CHECK_UPLINK (UPLINK_SYNC_WORD >> (SYNC_BITS-CHECK_BITS))
-
-    lenbits = len/2 - ((SYNC_BITS-CHECK_BITS) + UPLINK_FRAME_BITS);
+    lenbits = len/2 - (SYNC_BITS + UPLINK_FRAME_BITS);
     for (bit = 0; bit < lenbits; ++bit) {
         int16_t dphi0 = phi_difference(phi[bit*2], phi[bit*2+1]);
         int16_t dphi1 = phi_difference(phi[bit*2+1], phi[bit*2+2]);
 
-        sync0 = ((sync0 << 1) | (dphi0 > 0 ? 1 : 0));
-        sync1 = ((sync1 << 1) | (dphi1 > 0 ? 1 : 0));
+        sync0 = ((sync0 << 1) | (dphi0 > 0 ? 1 : 0)) & SYNC_MASK;
+        sync1 = ((sync1 << 1) | (dphi1 > 0 ? 1 : 0)) & SYNC_MASK;
 
-        if (bit < CHECK_BITS)
+        if (bit < SYNC_BITS)
             continue; // haven't fully populated sync0/1 yet
 
         // see if we have (the start of) a valid sync word
@@ -268,10 +317,9 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
         // errors.
 
         // check for downlink frames:
-
-        if ((sync0 & CHECK_MASK) == CHECK_ADSB || (sync1 & CHECK_MASK) == CHECK_ADSB) {
-            int startbit = (bit-CHECK_BITS+1);
-            int shift = ((sync0 & CHECK_MASK) == CHECK_ADSB) ? 0 : 1;
+        if (sync_word_fuzzy_compare(sync0, ADSB_SYNC_WORD) || sync_word_fuzzy_compare(sync1, ADSB_SYNC_WORD)) {
+            int startbit = (bit-SYNC_BITS+1);
+            int shift = (sync_word_fuzzy_compare(sync0, ADSB_SYNC_WORD) ? 0 : 1);
             int index = startbit*2+shift;
 
             int skip_0, skip_1;
@@ -293,10 +341,9 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
         }
 
         // check for uplink frames:
-
-        else if ((sync0 & CHECK_MASK) == CHECK_UPLINK || (sync1 & CHECK_MASK) == CHECK_UPLINK) {
-            int startbit = (bit-CHECK_BITS+1);
-            int shift = ((sync0 & CHECK_MASK) == CHECK_UPLINK) ? 0 : 1;
+        else if (sync_word_fuzzy_compare(sync0, UPLINK_SYNC_WORD) || sync_word_fuzzy_compare(sync1, UPLINK_SYNC_WORD)) {
+            int startbit = (bit-SYNC_BITS+1);
+            int shift = (sync_word_fuzzy_compare(sync0, UPLINK_SYNC_WORD) ? 0 : 1);
             int index = startbit*2+shift;
 
             int skip_0, skip_1;
@@ -318,7 +365,7 @@ int process_buffer(uint16_t *phi, int len, uint64_t offset)
         }
     }
 
-    return (bit - CHECK_BITS)*2;
+    return (bit - SYNC_BITS)*2;
 }
 
 // demodulate 'bytes' bytes from samples at 'phi' into 'frame',
