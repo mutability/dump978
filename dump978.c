@@ -267,7 +267,7 @@ int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center)
     return (error_bits <= MAX_SYNC_ERRORS);
 }
 
-#define SYNC_MASK ((1UL<<SYNC_BITS)-1)
+#define SYNC_MASK ((((uint64_t)1)<<SYNC_BITS)-1)
 
 int process_buffer(uint16_t *phi, int len, uint64_t offset)    
 {
