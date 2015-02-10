@@ -23,11 +23,7 @@
 #include <unistd.h>
 
 #include "uat.h"
-#include "fec/rs.h"
-
-void *rs_uplink;
-void *rs_adsb_short;
-void *rs_adsb_long;
+#include "fec.h"
 
 static void make_atan2_table();
 static void read_from_stdin();
@@ -37,9 +33,6 @@ static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
 static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center_dphi);
 static void handle_adsb_frame(uint64_t timestamp, uint8_t *frame, int rs);
 static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs);
-
-#define UPLINK_POLY 0x187
-#define ADSB_POLY 0x187
 
 #define SYNC_BITS (36)
 #define ADSB_SYNC_WORD   0xEACDDA4E2UL
@@ -64,11 +57,8 @@ inline int16_t phi_difference(uint16_t from, uint16_t to)
 
 int main(int argc, char **argv)
 {
-    rs_adsb_short = init_rs_char(8, /* gfpoly */ ADSB_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 12, /* pad */ 225);
-    rs_adsb_long  = init_rs_char(8, /* gfpoly */ ADSB_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 14, /* pad */ 207);
-    rs_uplink     = init_rs_char(8, /* gfpoly */ UPLINK_POLY, /* fcr */ 120, /* prim */ 1, /* nroots */ 20, /* pad */ 163);
-
     make_atan2_table();
+    init_fec();
     read_from_stdin();
     return 0;
 }
@@ -396,36 +386,21 @@ static void demod_frame(uint16_t *phi, uint8_t *frame, int bytes, int16_t center
 static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 {
     int16_t center_dphi;
-    int n_corrected;
+    int frametype;
 
     if (!check_sync_word(phi, ADSB_SYNC_WORD, &center_dphi)) {
         *rs_errors = 9999;
         return 0;
     }
 
-    demod_frame(phi + SYNC_BITS*2, to, LONG_FRAME_BYTES, center_dphi);
-
-    // Try decoding as a Long UAT.
-    // We rely on decode_rs_char not modifying the data if there were
-    // uncorrectable errors.
-    n_corrected = decode_rs_char(rs_adsb_long, to, NULL, 0);
-    if (n_corrected >= 0 && n_corrected <= 7 && (to[0]>>3) != 0) {
-        // Valid long frame.
-        *rs_errors = n_corrected;
-        return (SYNC_BITS+LONG_FRAME_BITS);
-    }
-
-    // Retry as Basic UAT
-    n_corrected = decode_rs_char(rs_adsb_short, to, NULL, 0);
-    if (n_corrected >= 0 && n_corrected <= 6 && (to[0]>>3) == 0) {
-        // Valid short frame
-        *rs_errors = n_corrected;
-        return (SYNC_BITS+SHORT_FRAME_BITS);
-    }
-
-    // Failed.
-    *rs_errors = 9999;
-    return 0;
+    demod_frame(phi + SYNC_BITS*2, to, LONG_FRAME_BYTES, center_dphi);    
+    frametype = correct_adsb_frame(to, rs_errors);
+    if (frametype == 1)
+        return (SYNC_BITS + SHORT_FRAME_BITS);
+    else if (frametype == 2)
+        return (SYNC_BITS + LONG_FRAME_BITS);
+    else
+        return 0;
 }
 
 // Demodulate an uplink frame
@@ -436,10 +411,8 @@ static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 // samples) consumed if demodulation was OK.
 static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
 {
-    int block;
     int16_t center_dphi;
     uint8_t interleaved[UPLINK_FRAME_BYTES];
-    int total_corrected = 0;
 
     if (!check_sync_word(phi, UPLINK_SYNC_WORD, &center_dphi)) {
         *rs_errors = 9999;
@@ -447,27 +420,10 @@ static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors)
     }
 
     demod_frame(phi + SYNC_BITS*2, interleaved, UPLINK_FRAME_BYTES, center_dphi);
-    
-    // deinterleave a block at a time directly into the target buffer
-    // (we have enough space for the trailing ECC as the caller provides UPLINK_FRAME_BYTES)
-    for (block = 0; block < UPLINK_FRAME_BLOCKS; ++block) {
-        int i, n_corrected;
-        uint8_t *blockdata = &to[block * UPLINK_BLOCK_DATA_BYTES];
 
-        for (i = 0; i < UPLINK_BLOCK_BYTES; ++i)
-            blockdata[i] = interleaved[i * UPLINK_FRAME_BLOCKS + block];
-
-        // error-correct in place
-        n_corrected = decode_rs_char(rs_uplink, blockdata, NULL, 0);
-        if (n_corrected < 0 || n_corrected > 10) {
-            *rs_errors = 9999;
-            return 0;
-        }
-
-        total_corrected += n_corrected;
-        // next block (if there is one) will overwrite the ECC bytes.
-    }
-
-    *rs_errors = total_corrected;
-    return (UPLINK_FRAME_BITS+SYNC_BITS);
+    // deinterleave and correct
+    if (correct_uplink_frame(interleaved, to, rs_errors) == 1)
+        return (UPLINK_FRAME_BITS+SYNC_BITS);
+    else
+        return 0;
 }
