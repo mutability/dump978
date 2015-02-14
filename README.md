@@ -2,6 +2,14 @@
 
 Experimental demodulator/decoder for 978MHz UAT signals.
 
+## A note about future development
+
+I'm in Europe which doesn't use UAT, so there won't be much spontaneous development going on
+now that the demodulator is at a basic "it works" stage.
+
+I'm happy to look at signal or message captures and help with further development, but it really
+needs to be driven by whoever is actually using the code to receive UAT!
+
 ## Demodulator
 
 dump978 is the demodulator. It expects 8-bit I/Q samples on stdin at
