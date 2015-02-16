@@ -28,8 +28,13 @@ void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
         uat_decode_adsb_mdb(frame, &mdb);
         uat_display_adsb_mdb(&mdb, stdout);
     } else {
-        fprintf(stdout, "Uplink frame (not decoded)\n");
+        struct uat_uplink_mdb mdb;
+        uat_decode_uplink_mdb(frame, &mdb);
+        uat_display_uplink_mdb(&mdb, stdout);
     }
+
+    fprintf(stdout, "\n");
+    fflush(stdout);
 }        
 
 int main(int argc, char **argv)

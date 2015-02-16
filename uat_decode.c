@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <math.h>
+#include <string.h>
 
 #include "uat.h"
 #include "uat_decode.h"
@@ -487,4 +488,283 @@ void uat_display_adsb_mdb(const struct uat_adsb_mdb *mdb, FILE *to)
     uat_display_sv(mdb, to);
     uat_display_ms(mdb, to);
     uat_display_auxsv(mdb, to);
+}
+
+
+static void uat_decode_info_frame(struct uat_uplink_info_frame *frame)
+{
+    if (frame->type != 0)
+        return;
+
+    if (frame->length < 4) // too short
+        return;
+
+    frame->is_fisb = 1;
+    frame->fisb.a_flag = (frame->data[0] & 0x80) ? 1 : 0;
+    frame->fisb.g_flag = (frame->data[0] & 0x40) ? 1 : 0;
+    frame->fisb.p_flag = (frame->data[0] & 0x20) ? 1 : 0;
+    frame->fisb.product_id = ((frame->data[0] & 0x1f) << 6) | (frame->data[1] >> 2);
+    frame->fisb.s_flag = (frame->data[1] & 0x02) ? 1 : 0;
+    frame->fisb.t_opt = ((frame->data[1] & 0x01) << 1) | (frame->data[2] >> 7);
+    frame->fisb.hours = (frame->data[2] & 0x7c) >> 2;
+    frame->fisb.minutes = ((frame->data[2] & 0x03) << 4) | (frame->data[3] >> 4);
+}
+
+void uat_decode_uplink_mdb(uint8_t *frame, struct uat_uplink_mdb *mdb)
+{
+    mdb->position_valid = (frame[5] & 0x01) ? 1 : 0;
+    if (mdb->position_valid) {
+        uint32_t raw_lat = (frame[0] << 15) | (frame[1] << 7) | (frame[2] >> 1);
+        uint32_t raw_lon = ((frame[2] & 0x01) << 23) | (frame[3] << 15) | (frame[4] << 7) | (frame[5] >> 1);
+        
+        mdb->lat = raw_lat * 360.0 / 16777216.0;
+        if (mdb->lat > 90)
+            mdb->lat -= 180;
+        mdb->lon = raw_lon * 360.0 / 16777216.0;
+        if (mdb->lon > 180)
+            mdb->lon -= 360;
+    }
+
+    mdb->utc_coupled = (frame[6] & 0x80) ? 1 : 0;
+    mdb->app_data_valid = (frame[6] & 0x20) ? 1 : 0;
+    mdb->slot_id = (frame[6] & 0x1f);
+    mdb->tisb_site_id = (frame[7] >> 4);
+
+    if (mdb->app_data_valid) {
+        uint8_t *data, *end;
+
+        memcpy(mdb->app_data, frame+8, 424);
+        mdb->num_info_frames = 0;
+        
+        data = mdb->app_data;
+        end = mdb->app_data + 424;
+        while (mdb->num_info_frames < UPLINK_MAX_INFO_FRAMES && data+2 <= end) {
+            struct uat_uplink_info_frame *frame = &mdb->info_frames[mdb->num_info_frames];
+            frame->length = (data[0] << 1) | (data[1] >> 7);
+            frame->type = (data[1] & 0x0f);
+            if (data + frame->length + 2 > end) {
+                // overrun?
+                break;
+            }
+
+            if (frame->length == 0 && frame->type == 0) {
+                break; // no more frames
+            }
+
+            frame->data = data + 2;
+
+            uat_decode_info_frame(frame);
+
+            data += frame->length + 2;
+            ++mdb->num_info_frames;
+        }
+    }
+}
+
+static const char *get_fisb_product_name(uint16_t product_id)
+{
+    switch (product_id) {
+    case 0: case 20: return "METAR and SPECI";
+    case 1: case 21: return "TAF and Amended TAF";
+    case 2: case 22: return "SIGMET";
+    case 3: case 23: return "Convective SIGMET";
+    case 4: case 24: return "AIRMET";
+    case 5: case 25: return "PIREP";
+    case 6: case 26: return "AWW";
+    case 7: case 27: return "Winds and Temperatures Aloft";
+    case 8: return "NOTAM (Including TFRs) and Service Status";
+    case 9: return "Aerodrome and Airspace – D-ATIS";
+    case 10: return "Aerodrome and Airspace - TWIP";
+    case 11: return "Aerodrome and Airspace - AIRMET";
+    case 12: return "Aerodrome and Airspace - SIGMET/Convective SIGMET";
+    case 13: return "Aerodrome and Airspace - SUA Status";
+    case 51: return "National NEXRAD, Type 0 - 4 level";
+    case 52: return "National NEXRAD, Type 1 - 8 level (quasi 6-level VIP)";
+    case 53: return "National NEXRAD, Type 2 - 8 level";
+    case 54: return "National NEXRAD, Type 3 - 16 level";
+    case 55: return "Regional NEXRAD, Type 0 - low dynamic range";
+    case 56: return "Regional NEXRAD, Type 1 - 8 level (quasi 6-level VIP)";
+    case 57: return "Regional NEXRAD, Type 2 - 8 level";
+    case 58: return "Regional NEXRAD, Type 3 - 16 level";
+    case 59: return "Individual NEXRAD, Type 0 - low dynamic range";
+    case 60: return "Individual NEXRAD, Type 1 - 8 level (quasi 6-level VIP)";
+    case 61: return "Individual NEXRAD, Type 2 - 8 level";
+    case 62: return "Individual NEXRAD, Type 3 - 16 level";
+    case 63: return "Global Block Representation - Regional NEXRAD, Type 4 – 8 level";
+    case 64: return "Global Block Representation - CONUS NEXRAD, Type 4 - 8 level";
+    case 81: return "Radar echo tops graphic, scheme 1: 16-level";
+    case 82: return "Radar echo tops graphic, scheme 2: 8-level";
+    case 83: return "Storm tops and velocity";
+    case 101: return "Lightning strike type 1 (pixel level)";
+    case 102: return "Lightning strike type 2 (grid element level)";
+    case 151: return "Point phenomena, vector format";
+    case 201: return "Surface conditions/winter precipitation graphic";
+    case 202: return "Surface weather systems";
+    case 254: return "AIRMET, SIGMET: Bitmap encoding";
+    case 351: return "System Time";
+    case 352: return "Operational Status";
+    case 353: return "Ground Station Status";
+    case 401: return "Generic Raster Scan Data Product APDU Payload Format Type 1";
+    case 402: case 411: return "Generic Textual Data Product APDU Payload Format Type 1";
+    case 403: return "Generic Vector Data Product APDU Payload Format Type 1";
+    case 404: case 412: return "Generic Symbolic Product APDU Payload Format Type 1";
+    case 405: case 413: return "Generic Textual Data Product APDU Payload Format Type 2";
+    case 600: return "FISDL Products – Proprietary Encoding";
+    case 2000: return "FAA/FIS-B Product 1 – Developmental";
+    case 2001: return "FAA/FIS-B Product 2 – Developmental";
+    case 2002: return "FAA/FIS-B Product 3 – Developmental";
+    case 2003: return "FAA/FIS-B Product 4 – Developmental";
+    case 2004: return "WSI Products - Proprietary Encoding";
+    case 2005: return "WSI Developmental Products";
+    default: return "unknown";
+    }
+}
+
+static const char *get_fisb_product_format(uint16_t product_id)
+{
+    switch (product_id) {
+    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7: 
+    case 351: case 352: case 353:
+    case 402: case 405:
+        return "Text";
+
+    case 8: case 9: case 10: case 11: case 12: case 13:        
+        return "Text/Graphic";
+       
+    case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: 
+    case 411: case 413:
+        return "Text (DLAC)";
+
+    case 51: case 52: case 53: case 54: case 55: case 56: case 57: case 58:
+    case 59: case 60: case 61: case 62: case 63: case 64:
+    case 81: case 82: case 83: 
+    case 101: case 102:
+    case 151:
+    case 201: case 202:
+    case 254:
+    case 401:
+    case 403:
+    case 404:
+        return "Graphic";
+
+    case 412:
+        return "Graphic (DLAC)";
+
+    case 600: case 2004:
+        return "Proprietary";
+
+    case 2000: case 2001: case 2002: case 2003: case 2005: 
+        return "Developmental";
+
+    default:
+        return "unknown";
+    }
+}
+
+static void uat_display_fisb_frame(const struct uat_uplink_info_frame *frame, FILE *to)
+{
+    fprintf(to, 
+            "FIS-B:\n"
+            " Flags:             %s%s%s%s\n"
+            " Product ID:        %u (%s)\n"
+            " Format:            %s\n"
+            " T option:          %d\n"
+            " Hours:             %u\n"
+            " Minutes:           %u\n",
+            frame->fisb.a_flag ? "A" : "",
+            frame->fisb.g_flag ? "G" : "",
+            frame->fisb.p_flag ? "P" : "",
+            frame->fisb.s_flag ? "S" : "",
+            frame->fisb.product_id,
+            get_fisb_product_name(frame->fisb.product_id),
+            get_fisb_product_format(frame->fisb.product_id),
+            frame->fisb.t_opt,
+            frame->fisb.hours,
+            frame->fisb.minutes);
+}            
+
+static const char *info_frame_type_names[16] = {
+    "FIS-B APDU",
+    "Reserved for Developmental Use",
+    "Reserved for Future Use (2)",
+    "Reserved for Future Use (3)",
+    "Reserved for Future Use (4)",
+    "Reserved for Future Use (5)",
+    "Reserved for Future Use (6)",
+    "Reserved for Future Use (7)",
+    "Reserved for Future Use (8)",
+    "Reserved for Future Use (9)",
+    "Reserved for Future Use (10)",
+    "Reserved for Future Use (11)",
+    "Reserved for Future Use (12)",
+    "Reserved for Future Use (13)",
+    "Reserved for Future Use (14)",
+    "TIS-B/ADS-R Service Status"
+};
+
+static void uat_display_uplink_info_frame(const struct uat_uplink_info_frame *frame, FILE *to)
+{
+    fprintf(to,
+            "INFORMATION FRAME:\n"
+            " Length:            %u bytes\n"
+            " Type:              %u (%s)\n",
+            frame->length,
+            frame->type,
+            info_frame_type_names[frame->type]);
+
+    if (frame->length > 0) {
+        unsigned i;
+        fprintf(to,
+                " Data:              ");
+        for (i = 0; i < frame->length; i += 16) {
+            unsigned j;
+
+            if (i > 0)
+                fprintf(to,
+                        "                    ");
+
+            for (j = i; j < i+16; ++j) {
+                if (j < frame->length)
+                    fprintf(to, "%02X ", frame->data[j]);
+                else
+                    fprintf(to, "   ");
+            }
+
+            for (j = i; j < i+16 && j < frame->length; ++j) {
+                fprintf(to, "%c", 
+                        (frame->data[j] >= 32 && frame->data[j] < 127) ? frame->data[j] : '.');
+            }
+            fprintf(to, "\n");
+        }
+
+        if (frame->is_fisb)
+            uat_display_fisb_frame(frame, to);
+    }
+}
+
+void uat_display_uplink_mdb(const struct uat_uplink_mdb *mdb, FILE *to)
+{
+    fprintf(to, 
+            "UPLINK:\n");
+
+    if (mdb->position_valid)
+        fprintf(to,
+                " Site Latitude:     %+.4f\n"
+                " Site Longitude:    %+.4f\n",
+                mdb->lat,
+                mdb->lon);
+            
+    fprintf(to,
+            " UTC coupled:       %s\n"
+            " Slot ID:           %u\n"
+            " TIS-B Site ID:     %u\n",
+            mdb->utc_coupled ? "yes" : "no",
+            mdb->slot_id,
+            mdb->tisb_site_id);
+    
+    if (mdb->app_data_valid) {
+        unsigned i;
+        for (i = 0; i < mdb->num_info_frames; ++i)
+            uat_display_uplink_info_frame(&mdb->info_frames[i], to);
+    }
 }

@@ -130,4 +130,55 @@ struct uat_adsb_mdb {
 void uat_decode_adsb_mdb(uint8_t *frame, struct uat_adsb_mdb *mdb);
 void uat_display_adsb_mdb(const struct uat_adsb_mdb *mdb, FILE *to);
 
+//
+// UPLINK 
+//
+
+/* theoretical maximum if the app data is nothing but 0-length frames */
+#define UPLINK_MAX_INFO_FRAMES 212
+
+struct fisb_apdu {
+    int a_flag : 1;
+    int g_flag : 1;
+    int p_flag : 1;
+    int s_flag : 1;
+    unsigned t_opt : 2;
+
+    uint16_t product_id;
+    uint8_t hours;
+    uint8_t minutes;
+};
+
+struct uat_uplink_info_frame {
+    int is_fisb : 1;
+
+    uint16_t length;
+    uint8_t type;
+    uint8_t *data; // points within the containing appdata
+
+    // if is_fisb:
+    struct fisb_apdu fisb;
+};
+
+struct uat_uplink_mdb {
+    int position_valid : 1;
+    int utc_coupled : 1;
+    int app_data_valid : 1;
+
+    // if position_valid:
+    double lat;
+    double lon;
+
+    uint8_t slot_id;
+    uint8_t tisb_site_id;
+
+    // if app_data_valid:
+    uint8_t app_data[424];
+    unsigned num_info_frames;
+    struct uat_uplink_info_frame info_frames[UPLINK_MAX_INFO_FRAMES];    
+};
+
+void uat_decode_uplink_mdb(uint8_t *frame, struct uat_uplink_mdb *mdb);
+void uat_display_uplink_mdb(const struct uat_uplink_mdb *mdb, FILE *to);
+
 #endif
