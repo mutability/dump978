@@ -147,6 +147,9 @@ struct fisb_apdu {
     uint16_t product_id;
     uint8_t hours;
     uint8_t minutes;
+
+    uint16_t length;
+    uint8_t *data;
 };
 
 struct uat_uplink_info_frame {

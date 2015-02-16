@@ -17,6 +17,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 
 #include "uat.h"
 #include "uat_decode.h"
@@ -508,6 +509,8 @@ static void uat_decode_info_frame(struct uat_uplink_info_frame *frame)
     frame->fisb.t_opt = ((frame->data[1] & 0x01) << 1) | (frame->data[2] >> 7);
     frame->fisb.hours = (frame->data[2] & 0x7c) >> 2;
     frame->fisb.minutes = ((frame->data[2] & 0x03) << 4) | (frame->data[3] >> 4);
+    frame->fisb.length = frame->length - 4;
+    frame->fisb.data = frame->data + 4;
 }
 
 void uat_decode_uplink_mdb(uint8_t *frame, struct uat_uplink_mdb *mdb)
@@ -561,6 +564,84 @@ void uat_decode_uplink_mdb(uint8_t *frame, struct uat_uplink_mdb *mdb)
     }
 }
 
+static void display_generic_data(uint8_t *data, uint16_t length, FILE *to)
+{
+    unsigned i;
+
+    fprintf(to,
+            " Data:              ");
+    for (i = 0; i < length; i += 16) {
+        unsigned j;
+        
+        if (i > 0)
+            fprintf(to,
+                    "                    ");
+        
+        for (j = i; j < i+16; ++j) {
+            if (j < length)
+                fprintf(to, "%02X ", data[j]);
+            else
+                fprintf(to, "   ");
+        }
+        
+        for (j = i; j < i+16 && j < length; ++j) {
+            fprintf(to, "%c", 
+                    (data[j] >= 32 && data[j] < 127) ? data[j] : '.');
+        }
+        fprintf(to, "\n");
+    }
+}
+
+// The odd two-string-literals here is to avoid \0x3ABCDEF being interpreted as a single (very large valued) character
+static const char *dlac_alphabet = "\x03" "ABCDEFGHIJKLMNOPQRSTUVWXYZ\x1A\t\x1E\n| !\"#$%&'()*+,-./0123456789:;<=>?";
+
+static const char *decode_dlac(uint8_t *data, unsigned bytelen)
+{
+    static char buf[1024];
+    uint8_t *end = data + bytelen;
+    char *p = buf;
+    int step = 0;
+    int tab = 0;
+    
+    while (data < end) {
+        int ch;
+
+        assert(step >= 0 && step <= 3);
+        switch (step) {
+        case 0:
+            ch = data[0] >> 2;
+            ++data;
+            break;
+        case 1:
+            ch = ((data[-1] & 0x03) << 4) | (data[0] >> 4);
+            ++data;
+            break;
+        case 2:
+            ch = ((data[-1] & 0x0f) << 2) | (data[0] >> 6);
+            break;
+        case 3:
+            ch = data[0] & 0x3f;
+            ++data;
+            break;
+        }
+
+        if (tab) {
+            while (ch > 0)
+                *p++ = ' ', ch--;
+            tab = 0;
+        } else if (ch == 28) { // tab
+            tab = 1;
+        } else {
+            *p++ = dlac_alphabet[ch];
+        }
+
+        step = (step+1)%4;
+    }
+
+    *p = 0;
+    return buf;
+}
+    
 static const char *get_fisb_product_name(uint16_t product_id)
 {
     switch (product_id) {
@@ -661,7 +742,7 @@ static const char *get_fisb_product_format(uint16_t product_id)
     }
 }
 
-static void uat_display_fisb_frame(const struct uat_uplink_info_frame *frame, FILE *to)
+static void uat_display_fisb_frame(const struct fisb_apdu *apdu, FILE *to)
 {
     fprintf(to, 
             "FIS-B:\n"
@@ -671,16 +752,82 @@ static void uat_display_fisb_frame(const struct uat_uplink_info_frame *frame, FI
             " T option:          %d\n"
             " Hours:             %u\n"
             " Minutes:           %u\n",
-            frame->fisb.a_flag ? "A" : "",
-            frame->fisb.g_flag ? "G" : "",
-            frame->fisb.p_flag ? "P" : "",
-            frame->fisb.s_flag ? "S" : "",
-            frame->fisb.product_id,
-            get_fisb_product_name(frame->fisb.product_id),
-            get_fisb_product_format(frame->fisb.product_id),
-            frame->fisb.t_opt,
-            frame->fisb.hours,
-            frame->fisb.minutes);
+            apdu->a_flag ? "A" : "",
+            apdu->g_flag ? "G" : "",
+            apdu->p_flag ? "P" : "",
+            apdu->s_flag ? "S" : "",
+            apdu->product_id,
+            get_fisb_product_name(apdu->product_id),
+            get_fisb_product_format(apdu->product_id),
+            apdu->t_opt,
+            apdu->hours,
+            apdu->minutes);
+
+    switch (apdu->product_id) {
+    case 413:
+        {
+            // Generic text, DLAC
+            const char *text = decode_dlac(apdu->data, apdu->length);
+            const char *report = text;
+            
+            while (report) {
+                char report_buf[1024];
+                const char *next_report;
+                char *p, *r;
+                
+                next_report = strchr(report, '\x1e'); // RS
+                if (!next_report)
+                    next_report = strchr(report, '\x03'); // ETX
+                if (next_report) {
+                    memcpy(report_buf, report, next_report - report);
+                    report_buf[next_report - report] = 0;
+                    report = next_report + 1;
+                } else {
+                    strcpy(report_buf, report);
+                    report = NULL;
+                }
+                
+                if (!report_buf[0])
+                    continue;
+
+                r = report_buf;
+                p = strchr(r, ' ');
+                if (p) {
+                    *p = 0;
+                    fprintf(to,
+                            " Report type:       %s\n",
+                            r);
+                    r = p+1;
+                }
+                
+                p = strchr(r, ' ');
+                if (p) {
+                    *p = 0;
+                    fprintf(to,
+                            " Location ID:       %s\n",
+                            r);
+                    r = p+1;
+                }
+                
+                p = strchr(r, ' ');
+                if (p) {
+                    *p = 0;
+                    fprintf(to,
+                            " Time:              %s\n",
+                            r);
+                    r = p+1;
+                }
+                
+                fprintf(to,
+                        " Text:\n%s\n",
+                        r);
+            }
+        }            
+        break;
+    default:
+        display_generic_data(apdu->data, apdu->length, to);
+        break;
+    }                
 }            
 
 static const char *info_frame_type_names[16] = {
@@ -713,32 +860,11 @@ static void uat_display_uplink_info_frame(const struct uat_uplink_info_frame *fr
             info_frame_type_names[frame->type]);
 
     if (frame->length > 0) {
-        unsigned i;
-        fprintf(to,
-                " Data:              ");
-        for (i = 0; i < frame->length; i += 16) {
-            unsigned j;
-
-            if (i > 0)
-                fprintf(to,
-                        "                    ");
-
-            for (j = i; j < i+16; ++j) {
-                if (j < frame->length)
-                    fprintf(to, "%02X ", frame->data[j]);
-                else
-                    fprintf(to, "   ");
-            }
-
-            for (j = i; j < i+16 && j < frame->length; ++j) {
-                fprintf(to, "%c", 
-                        (frame->data[j] >= 32 && frame->data[j] < 127) ? frame->data[j] : '.');
-            }
-            fprintf(to, "\n");
-        }
-
         if (frame->is_fisb)
-            uat_display_fisb_frame(frame, to);
+            uat_display_fisb_frame(&frame->fisb, to);
+        else {
+            display_generic_data(frame->data, frame->length, to);
+        }
     }
 }
 
