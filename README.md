@@ -4,11 +4,12 @@ Experimental demodulator/decoder for 978MHz UAT signals.
 
 ## A note about future development
 
-I'm in Europe which doesn't use UAT, so there won't be much spontaneous development going on
-now that the demodulator is at a basic "it works" stage.
+I'm in Europe which doesn't use UAT, so there won't be much spontaneous
+development going on now that the demodulator is at a basic "it works" stage.
 
-I'm happy to look at signal or message captures and help with further development, but it really
-needs to be driven by whoever is actually using the code to receive UAT!
+I'm happy to look at signal or message captures and help with further
+development, but it really needs to be driven by whoever is actually using the
+code to receive UAT!
 
 ## Demodulator
 
@@ -32,14 +33,34 @@ a reference implementation.
 
 ## Decoder
 
-To decode downlink messages into a readable form (uplink messages are
-not yet handled) use uat2text:
+To decode messages into a readable form use uat2text:
 
 ````
 $ rtl_sdr -f 978000000 -s 2083334 -g 48 - | ./dump978 | ./uat2text
 ````
 
-See sample-output.txt for some example output.
+## Sample data
+
+Around 1100 sample messages are in the file sample-data.txt.gz. They are the
+output of the demodulator from various RF captures I have on hand. This file
+can be fed to uat2text etc:
+
+$ zcat sample-data.txt.gz | ./uat2text
+
+When testing, this is much easier on your CPU (and disk space!) than starting
+from the raw RF captures.
+
+## Filtering for just uplink or downlink messages
+
+As the uplink and downlink messages start with different characters, you can
+filter for just one type of message very easily with grep:
+
+````
+  # Uplink messages only:
+$ zcat sample-data.txt.gz | grep "^+" | ./uat2text
+  # Downlink messages only:
+$ zcat sample-data.txt.gz | grep "^-" | ./uat2text
+````
 
 ## Map generation via uat2json
 
