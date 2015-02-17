@@ -5,7 +5,7 @@ CC=gcc
 
 all: dump978 uat2json uat2text uat2esnt
 
-%.o: %.c
+%.o: %.c *.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 dump978: dump978.o fec.o fec/decode_rs_char.o fec/init_rs_char.o
