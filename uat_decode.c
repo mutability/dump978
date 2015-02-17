@@ -494,8 +494,10 @@ void uat_display_adsb_mdb(const struct uat_adsb_mdb *mdb, FILE *to)
 
 static void uat_decode_info_frame(struct uat_uplink_info_frame *frame)
 {
-    if (frame->type != 0)
+    if (frame->type != 0) {
+        frame->is_fisb = 0;
         return;
+    }
 
     if (frame->length < 4) // too short
         return;
