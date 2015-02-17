@@ -142,11 +142,15 @@ struct fisb_apdu {
     int g_flag : 1;
     int p_flag : 1;
     int s_flag : 1;
-    unsigned t_opt : 2;
+    int monthday_valid : 1;
+    int seconds_valid : 1;
 
     uint16_t product_id;
+    uint8_t month;   // if monthday_valid
+    uint8_t day;     // if monthday_valid
     uint8_t hours;
     uint8_t minutes;
+    uint8_t seconds; // if seconds_valid
 
     uint16_t length;
     uint8_t *data;

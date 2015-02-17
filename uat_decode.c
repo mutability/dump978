@@ -494,25 +494,71 @@ void uat_display_adsb_mdb(const struct uat_adsb_mdb *mdb, FILE *to)
 
 static void uat_decode_info_frame(struct uat_uplink_info_frame *frame)
 {
-    if (frame->type != 0) {
-        frame->is_fisb = 0;
+    unsigned t_opt;
+
+    frame->is_fisb = 0;
+
+    if (frame->type != 0)
+        return; // not FIS-B
+
+    if (frame->length < 4) // too short for FIS-B
         return;
+
+    t_opt = ((frame->data[1] & 0x01) << 1) | (frame->data[2] >> 7);
+
+    switch (t_opt) {
+    case 0: // Hours, Minutes
+        frame->fisb.monthday_valid = 0;
+        frame->fisb.seconds_valid = 0;
+        frame->fisb.hours = (frame->data[2] & 0x7c) >> 2;
+        frame->fisb.minutes = ((frame->data[2] & 0x03) << 4) | (frame->data[3] >> 4);
+        frame->fisb.length = frame->length - 4;
+        frame->fisb.data = frame->data + 4;
+        break;
+    case 1: // Hours, Minutes, Seconds
+        if (frame->length < 5)
+            return;
+        frame->fisb.monthday_valid = 0;
+        frame->fisb.seconds_valid = 1;
+        frame->fisb.hours = (frame->data[2] & 0x7c) >> 2;
+        frame->fisb.minutes = ((frame->data[2] & 0x03) << 4) | (frame->data[3] >> 4);
+        frame->fisb.seconds = ((frame->data[3] & 0x0f) << 2) | (frame->data[4] >> 6);
+        frame->fisb.length = frame->length - 5;
+        frame->fisb.data = frame->data + 5;
+        break;
+    case 2: // Month, Day, Hours, Minutes
+        if (frame->length < 5)
+            return;
+        frame->fisb.monthday_valid = 1;
+        frame->fisb.seconds_valid = 0;
+        frame->fisb.month = (frame->data[2] & 0x78) >> 3;
+        frame->fisb.day = ((frame->data[2] & 0x07) << 2) | (frame->data[3] >> 6);
+        frame->fisb.hours = (frame->data[3] & 0x3e) >> 1;
+        frame->fisb.minutes = ((frame->data[3] & 0x01) << 5) | (frame->data[4] >> 3);
+        frame->fisb.length = frame->length - 5; // ???
+        frame->fisb.data = frame->data + 5;
+        break;
+    case 3: // Month, Day, Hours, Minutes, Seconds
+        if (frame->length < 6)
+            return;
+        frame->fisb.monthday_valid = 1;
+        frame->fisb.seconds_valid = 1;
+        frame->fisb.month = (frame->data[2] & 0x78) >> 3;
+        frame->fisb.day = ((frame->data[2] & 0x07) << 2) | (frame->data[3] >> 6);
+        frame->fisb.hours = (frame->data[3] & 0x3e) >> 1;
+        frame->fisb.minutes = ((frame->data[3] & 0x01) << 5) | (frame->data[4] >> 3);
+        frame->fisb.seconds = ((frame->data[4] & 0x03) << 3) | (frame->data[5] >> 5);
+        frame->fisb.length = frame->length - 6;
+        frame->fisb.data = frame->data + 6;
+        break;
     }
 
-    if (frame->length < 4) // too short
-        return;
-
-    frame->is_fisb = 1;
     frame->fisb.a_flag = (frame->data[0] & 0x80) ? 1 : 0;
     frame->fisb.g_flag = (frame->data[0] & 0x40) ? 1 : 0;
     frame->fisb.p_flag = (frame->data[0] & 0x20) ? 1 : 0;
     frame->fisb.product_id = ((frame->data[0] & 0x1f) << 6) | (frame->data[1] >> 2);
     frame->fisb.s_flag = (frame->data[1] & 0x02) ? 1 : 0;
-    frame->fisb.t_opt = ((frame->data[1] & 0x01) << 1) | (frame->data[2] >> 7);
-    frame->fisb.hours = (frame->data[2] & 0x7c) >> 2;
-    frame->fisb.minutes = ((frame->data[2] & 0x03) << 4) | (frame->data[3] >> 4);
-    frame->fisb.length = frame->length - 4;
-    frame->fisb.data = frame->data + 4;
+    frame->is_fisb = 1;
 }
 
 void uat_decode_uplink_mdb(uint8_t *frame, struct uat_uplink_mdb *mdb)
@@ -749,21 +795,23 @@ static void uat_display_fisb_frame(const struct fisb_apdu *apdu, FILE *to)
     fprintf(to, 
             "FIS-B:\n"
             " Flags:             %s%s%s%s\n"
-            " Product ID:        %u (%s)\n"
-            " Format:            %s\n"
-            " T option:          %d\n"
-            " Hours:             %u\n"
-            " Minutes:           %u\n",
+            " Product ID:        %u (%s) - %s\n",
             apdu->a_flag ? "A" : "",
             apdu->g_flag ? "G" : "",
             apdu->p_flag ? "P" : "",
             apdu->s_flag ? "S" : "",
             apdu->product_id,
             get_fisb_product_name(apdu->product_id),
-            get_fisb_product_format(apdu->product_id),
-            apdu->t_opt,
-            apdu->hours,
-            apdu->minutes);
+            get_fisb_product_format(apdu->product_id));
+
+    fprintf(to,
+            " Product time:      ");
+    if (apdu->monthday_valid)
+        fprintf(to, "%u/%u ", apdu->month, apdu->day);
+    fprintf(to, "%02u:%02u", apdu->hours, apdu->minutes);
+    if (apdu->seconds_valid)
+        fprintf(to, ":%02u", apdu->seconds);
+    fprintf(to, "\n");
 
     switch (apdu->product_id) {
     case 413:
@@ -806,7 +854,7 @@ static void uat_display_fisb_frame(const struct fisb_apdu *apdu, FILE *to)
                 if (p) {
                     *p = 0;
                     fprintf(to,
-                            " Location ID:       %s\n",
+                            " Report location:   %s\n",
                             r);
                     r = p+1;
                 }
@@ -815,7 +863,7 @@ static void uat_display_fisb_frame(const struct fisb_apdu *apdu, FILE *to)
                 if (p) {
                     *p = 0;
                     fprintf(to,
-                            " Time:              %s\n",
+                            " Report time:       %s\n",
                             r);
                     r = p+1;
                 }
