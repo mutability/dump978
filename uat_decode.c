@@ -564,7 +564,11 @@ static void uat_decode_info_frame(struct uat_uplink_info_frame *frame)
 void uat_decode_uplink_mdb(uint8_t *frame, struct uat_uplink_mdb *mdb)
 {
     mdb->position_valid = (frame[5] & 0x01) ? 1 : 0;
-    if (mdb->position_valid) {
+
+    /* Even with position_valid = 0, there seems to be plausible data here.
+     * Decode it always.
+     */
+    /*if (mdb->position_valid)*/ {
         uint32_t raw_lat = (frame[0] << 15) | (frame[1] << 7) | (frame[2] >> 1);
         uint32_t raw_lon = ((frame[2] & 0x01) << 23) | (frame[3] << 15) | (frame[4] << 7) | (frame[5] >> 1);
         
@@ -923,12 +927,11 @@ void uat_display_uplink_mdb(const struct uat_uplink_mdb *mdb, FILE *to)
     fprintf(to, 
             "UPLINK:\n");
 
-    if (mdb->position_valid)
-        fprintf(to,
-                " Site Latitude:     %+.4f\n"
-                " Site Longitude:    %+.4f\n",
-                mdb->lat,
-                mdb->lon);
+    fprintf(to,
+            " Site Latitude:     %+.4f%s\n"
+            " Site Longitude:    %+.4f%s\n",
+            mdb->lat, mdb->position_valid ? "" : " (possibly invalid)",
+            mdb->lon, mdb->position_valid ? "" : " (possibly invalid)");
             
     fprintf(to,
             " UTC coupled:       %s\n"
