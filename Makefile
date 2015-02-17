@@ -27,4 +27,4 @@ test: fec_tests
 	./fec_tests
 
 clean:
-	rm *.o fec/*.o dump978 uat2json uat2text
+	rm -f *~ *.o fec/*.o dump978 uat2json uat2text uat2esnt fec_tests
