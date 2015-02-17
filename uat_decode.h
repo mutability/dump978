@@ -134,8 +134,9 @@ void uat_display_adsb_mdb(const struct uat_adsb_mdb *mdb, FILE *to);
 // UPLINK 
 //
 
-/* theoretical maximum if the app data is nothing but 0-length frames */
-#define UPLINK_MAX_INFO_FRAMES 212
+// assume 6 byte frames: 2 header bytes, 4 byte payload
+// (TIS-B heartbeat with one address, or empty FIS-B APDU)
+#define UPLINK_MAX_INFO_FRAMES (424/6)
 
 struct fisb_apdu {
     int a_flag : 1;
