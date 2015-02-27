@@ -133,8 +133,8 @@ for image in images.values():
                     lon = lonW + x * lonSize / 32.0
                 
                     cc.move_to(*project(lat,lon))
-                    cc.line_to(*project(lat+latSize/4.0,lon))
-                    cc.line_to(*project(lat+latSize/4.0,lon+lonSize/32.0))
+                    cc.line_to(*project(lat-latSize/4.0,lon))
+                    cc.line_to(*project(lat-latSize/4.0,lon+lonSize/32.0))
                     cc.line_to(*project(lat,lon+lonSize/32.0))
                     cc.close_path()
                     cc.set_source(color_for(intensity))
