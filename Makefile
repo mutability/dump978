@@ -20,9 +20,6 @@ uat2text: uat2text.o uat_decode.o reader.o
 uat2esnt: uat2esnt.o uat_decode.o reader.o
 	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
 
-uat2esntdf17: uat2esntdf17.o uat_decode.o reader.o
-	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
-
 extract_nexrad: extract_nexrad.o uat_decode.o reader.o
 	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
 
