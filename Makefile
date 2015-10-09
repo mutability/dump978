@@ -3,7 +3,7 @@ LDFLAGS=
 LIBS=-lm
 CC=gcc
 
-all: dump978 uat2json uat2text uat2esnt extract_nexrad
+all: dump978 uat2json uat2text uat2esnt extract_nexrad uat2esntdf17
 
 %.o: %.c *.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
@@ -20,6 +20,9 @@ uat2text: uat2text.o uat_decode.o reader.o
 uat2esnt: uat2esnt.o uat_decode.o reader.o
 	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
 
+uat2esntdf17: uat2esntdf17.o uat_decode.o reader.o
+	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
+
 extract_nexrad: extract_nexrad.o uat_decode.o reader.o
 	$(CC) -g -o $@ $^ $(LDFLAGS) $(LIBS)
 
@@ -30,4 +33,4 @@ test: fec_tests
 	./fec_tests
 
 clean:
-	rm -f *~ *.o fec/*.o dump978 uat2json uat2text uat2esnt fec_tests
+	rm -f *~ *.o fec/*.o dump978 uat2json uat2text uat2esnt fec_tests uat2esntdf17
