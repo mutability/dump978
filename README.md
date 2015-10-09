@@ -122,3 +122,5 @@ $ rtl_sdr -f 978000000 -s 2083334 -g 48 - | \
   ./uat2esnt | \
   nc -q1 localhost 30001
 ````
+
+## uat2esntdf17: Highly experimental implementation of uat2esnt for FlightRadar24
