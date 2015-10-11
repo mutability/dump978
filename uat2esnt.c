@@ -25,7 +25,7 @@
 #include "reader.h"
 
 static void checksum_and_send(uint8_t *frame, int len, uint32_t parity);
-static bool df17 = false;
+static _Bool df17 = 0;
 // If you call this with constants for firstbit/lastbit
 // gcc will do a pretty good job of crunching it down
 // to just a couple of operations. Even more so if value
@@ -665,13 +665,14 @@ void showHelp(void) {
 }
 int main(int argc, char **argv)
 {
+    int j;
     struct dump978_reader *reader;
     int framecount;
 
     initCrcTables();
 for (j = 1; j < argc; j++) {
     if (!strcmp(argv[j],"--df17")) {
-        df17 = true;
+        df17 = 1;
     }
     else if (!strcmp(argv[j],"")){
     }
