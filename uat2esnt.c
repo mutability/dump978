@@ -251,7 +251,7 @@ static void send_altitude_only(struct uat_adsb_mdb *mdb)
         raw_alt = 0;
     }
 
-    if (df17) {
+    if (df17 && mdb->address_qualifier_t == AQ_ADSB_ICAO) {
         setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
         setbits(esnt_frame, 6, 8, 0);                  // CF=0
     }
@@ -281,7 +281,7 @@ static void maybe_send_surface_position(struct uat_adsb_mdb *mdb)
     if (mdb->airground_state != AG_GROUND)
         return; // nope!
 
-    if (df17) {
+    if (df17 && mdb->address_qualifier_t == AQ_ADSB_ICAO) {
         setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
         setbits(esnt_frame, 6, 8, 0);                  // CF=0
     }
@@ -335,7 +335,7 @@ static void maybe_send_air_position(struct uat_adsb_mdb *mdb)
         return;
     }        
 
-    if (df17) {
+    if (df17 && mdb->address_qualifier_t == AQ_ADSB_ICAO) {
         setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
         setbits(esnt_frame, 6, 8, 0);                  // CF=0
     }
@@ -394,7 +394,7 @@ static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
         return;
     }
 
-   if (df17) {
+   if (df17 && mdb->address_qualifier_t == AQ_ADSB_ICAO) {
         setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
         setbits(esnt_frame, 6, 8, 0);                  // CF=0
     }
@@ -518,7 +518,7 @@ static void maybe_send_callsign(struct uat_adsb_mdb *mdb)
     // (see doc 9871 B.3.4.3)
     switch (mdb->callsign_type) {
     case CS_CALLSIGN:
-        if (df17) {
+        if (df17 && mdb->address_qualifier_t == AQ_ADSB_ICAO) {
             setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
             setbits(esnt_frame, 6, 8, imf ? 0 : 1);                  // CF=0
         }
