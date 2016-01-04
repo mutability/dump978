@@ -25,7 +25,7 @@
 #include "reader.h"
 
 static void checksum_and_send(uint8_t *frame, int len, uint32_t parity);
-
+static _Bool df17 = 0;
 // If you call this with constants for firstbit/lastbit
 // gcc will do a pretty good job of crunching it down
 // to just a couple of operations. Even more so if value
@@ -251,8 +251,14 @@ static void send_altitude_only(struct uat_adsb_mdb *mdb)
         raw_alt = 0;
     }
 
-    setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
+    if (df17 && mdb->address_qualifier == AQ_ADSB_ICAO) {
+        setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
+        setbits(esnt_frame, 6, 8, 0);                  // CF=0
+    }
+    else {
+        setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
+        setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
+    }
     setbits(esnt_frame, 9, 32, mdb->address);      // AA
 
     // ES:
@@ -275,8 +281,14 @@ static void maybe_send_surface_position(struct uat_adsb_mdb *mdb)
     if (mdb->airground_state != AG_GROUND)
         return; // nope!
 
-    setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
+    if (df17 && mdb->address_qualifier == AQ_ADSB_ICAO) {
+        setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
+        setbits(esnt_frame, 6, 8, 0);                  // CF=0
+    }
+    else {
+        setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
+        setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
+    }
     setbits(esnt_frame, 9, 32, mdb->address);      // AA
 
     setbits(esnt_frame+4, 1, 5, 8);                                            // FORMAT TYPE CODE = 8, surface position (NUCp=6)
@@ -323,8 +335,14 @@ static void maybe_send_air_position(struct uat_adsb_mdb *mdb)
         return;
     }        
 
-    setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 6);             // CF=6,  ADS-R
+    if (df17 && mdb->address_qualifier == AQ_ADSB_ICAO) {
+        setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
+        setbits(esnt_frame, 6, 8, 0);                  // CF=0
+    }
+    else {
+        setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
+        setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
+    }
     setbits(esnt_frame, 9, 32, mdb->address); // AA
 
     // decide on a metype
@@ -376,8 +394,14 @@ static void maybe_send_air_velocity(struct uat_adsb_mdb *mdb)
         return;
     }
 
-    setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
-    setbits(esnt_frame, 6, 8, 6);             // CF=6,  ADS-R
+   if (df17 && mdb->address_qualifier == AQ_ADSB_ICAO) {
+        setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
+        setbits(esnt_frame, 6, 8, 0);                  // CF=0
+    }
+    else {
+        setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
+        setbits(esnt_frame, 6, 8, 6);                  // CF=6,  ADS-R
+    }
     setbits(esnt_frame, 9, 32, mdb->address); // AA
 
     supersonic = (mdb->airground_state == AG_SUPERSONIC);
@@ -494,8 +518,14 @@ static void maybe_send_callsign(struct uat_adsb_mdb *mdb)
     // (see doc 9871 B.3.4.3)
     switch (mdb->callsign_type) {
     case CS_CALLSIGN:
-        setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
-        setbits(esnt_frame, 6, 8, imf ? 5 : 6);   // CF=6 for ICAO, CF=5 for non-ICAO
+        if (df17 && mdb->address_qualifier == AQ_ADSB_ICAO) {
+            setbits(esnt_frame, 1, 5, 17);                 // DF=17, ADS-B
+            setbits(esnt_frame, 6, 8, imf ? 0 : 1);                  // CF=0
+        }
+        else {
+            setbits(esnt_frame, 1, 5, 18);                 // DF=18, ES/NT
+            setbits(esnt_frame, 6, 8, imf ? 5 : 6);        // CF=6 for ICAO, CF=5 for non-ICAO
+        }
         setbits(esnt_frame, 9, 32, mdb->address); // AA
 
         if (mdb->emitter_category <= 7) {
@@ -628,14 +658,32 @@ static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra
         generate_esnt(&mdb);
     }
 }        
-
+void showHelp(void) {
+    printf(
+"--df17                   Output mesages in DF=17 CA=0 Format\n"
+    );
+}
 int main(int argc, char **argv)
 {
+    int j;
     struct dump978_reader *reader;
     int framecount;
 
     initCrcTables();
-
+for (j = 1; j < argc; j++) {
+    if (!strcmp(argv[j],"--df17")) {
+        df17 = 1;
+    }
+    else if (!strcmp(argv[j],"")){
+    }
+    else {
+        fprintf(stderr,
+                "Unknown or not enough arguments for option '%s'.\n\n",
+                argv[j]);
+        showHelp();
+        exit(1);
+    }
+}
     reader = dump978_reader_new(0,0);
     if (!reader) {
         perror("dump978_reader_new");

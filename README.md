@@ -122,3 +122,7 @@ $ rtl_sdr -f 978000000 -s 2083334 -g 48 - | \
   ./uat2esnt | \
   nc -q1 localhost 30001
 ````
+The --df17 parameter is for FlightRadar24 to accept the data
+````
+$ ./uat2esnt --df17
+````
