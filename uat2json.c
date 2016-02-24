@@ -180,15 +180,16 @@ static void process_mdb(struct uat_adsb_mdb *mdb)
 static int write_receiver_json(const char *dir)
 {
     char path[PATH_MAX];
+    char path_new[PATH_MAX];
     FILE *f;
 
-    if (snprintf(path, PATH_MAX, "%s/receiver.json.new", dir) >= PATH_MAX) {
+    if (snprintf(path, PATH_MAX, "%s/receiver.json", dir) >= PATH_MAX || snprintf(path_new, PATH_MAX, "%s/receiver.json.new", dir) >= PATH_MAX) {
         fprintf(stderr, "write_receiver_json: path too long\n");
         return 0;
     }
 
-    if (!(f = fopen(path, "w"))) {
-        fprintf(stderr, "fopen(%s): %m\n", path);
+    if (!(f = fopen(path_new, "w"))) {
+        fprintf(stderr, "fopen(%s): %m\n", path_new);
         return 0;
     }
 
@@ -199,6 +200,11 @@ static int write_receiver_json(const char *dir)
             "  \"history\" : 0\n"
             "}\n");
     fclose(f);
+
+    if (rename(path_new, path) < 0) {
+        fprintf(stderr, "rename(%s,%s): %m\n", path_new, path);
+        return 0;
+    }
 
     return 1;
 }
