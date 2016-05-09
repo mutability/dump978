@@ -117,7 +117,18 @@ static void convert_to_phi(uint16_t *buffer, int n)
 {
     int i;
 
-    for (i = 0; i < n; ++i)
+    // unroll the loop. n is always > 2048, usually 36864
+    for (i = 0; i+8 <= n; i += 8) {
+        buffer[i] = iqphase[buffer[i]];
+        buffer[i+1] = iqphase[buffer[i+1]];
+        buffer[i+2] = iqphase[buffer[i+2]];
+        buffer[i+3] = iqphase[buffer[i+3]];
+        buffer[i+4] = iqphase[buffer[i+4]];
+        buffer[i+5] = iqphase[buffer[i+5]];
+        buffer[i+6] = iqphase[buffer[i+6]];
+        buffer[i+7] = iqphase[buffer[i+7]];
+    }
+    for (; i < n; ++i)
         buffer[i] = iqphase[buffer[i]];
 }
 
