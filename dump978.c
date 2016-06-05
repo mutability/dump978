@@ -27,6 +27,7 @@
 
 static void make_atan2_table();
 static void read_from_stdin();
+static int check_sync_word(uint16_t *phi, uint64_t pattern, int16_t *center);
 static int process_buffer(uint16_t *phi, int len, uint64_t offset);
 static int demod_adsb_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
 static int demod_uplink_frame(uint16_t *phi, uint8_t *to, int *rs_errors);
@@ -89,7 +90,7 @@ static void handle_uplink_frame(uint64_t timestamp, uint8_t *frame, int rs)
     fflush(stdout);
 }
 
-uint16_t iqphase[65536]; // contains value [0..65536) -> [0, 2*pi)
+static uint16_t iqphase[65536]; // contains value [0..65536) -> [0, 2*pi)
 
 void make_atan2_table()
 {
@@ -100,8 +101,8 @@ void make_atan2_table()
     } u;
 
     for (i = 0; i < 256; ++i) {
+        double d_i = (i - 127.5);
         for (q = 0; q < 256; ++q) {
-            double d_i = (i - 127.5);
             double d_q = (q - 127.5);
             double ang = atan2(d_q, d_i) + M_PI; // atan2 returns [-pi..pi], normalize to [0..2*pi]
             double scaled_ang = round(32768 * ang / M_PI);
@@ -117,7 +118,18 @@ static void convert_to_phi(uint16_t *buffer, int n)
 {
     int i;
 
-    for (i = 0; i < n; ++i)
+    // unroll the loop. n is always > 2048, usually 36864
+    for (i = 0; i+8 <= n; i += 8) {
+        buffer[i] = iqphase[buffer[i]];
+        buffer[i+1] = iqphase[buffer[i+1]];
+        buffer[i+2] = iqphase[buffer[i+2]];
+        buffer[i+3] = iqphase[buffer[i+3]];
+        buffer[i+4] = iqphase[buffer[i+4]];
+        buffer[i+5] = iqphase[buffer[i+5]];
+        buffer[i+6] = iqphase[buffer[i+6]];
+        buffer[i+7] = iqphase[buffer[i+7]];
+    }
+    for (; i < n; ++i)
         buffer[i] = iqphase[buffer[i]];
 }
 
