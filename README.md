@@ -64,12 +64,13 @@ $ zcat sample-data.txt.gz | grep "^-" | ./uat2text
 
 ## Map generation via uat2json
 
-uat2json writes aircraft.json files in the format expected by dump1090's
-map html/javascript.
+uat2json writes aircraft.json files in the format expected by *my fork* of
+[dump1090](https://github.com/mutability/dump1090)'s map html/javascript.
 
 To set up a live map feed:
 
-1) Get a copy of dump1090, we're going to reuse its mapping html/javascript:
+1) Get a copy of [this dump1090 repository](https://github.com/mutability/dump1090).
+We're going to reuse its mapping html/javascript:
 
 ````
 $ git clone https://github.com/mutability/dump1090 dump1090-copy
