@@ -508,6 +508,11 @@ static void maybe_send_callsign(struct uat_adsb_mdb *mdb)
 
     switch (mdb->callsign_type) {
     case CS_CALLSIGN:
+        if (imf) {
+            // Not sent with non-ICAO addresses
+            return;
+        }
+
         setbits(esnt_frame, 1, 5, 18);            // DF=18, ES/NT
         setbits(esnt_frame, 6, 8, encode_cf(mdb));// CF
         setbits(esnt_frame, 9, 32, mdb->address); // AA
