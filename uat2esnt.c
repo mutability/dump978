@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <getopt.h>
 
 #include "uat.h"
 #include "uat_decode.h"
@@ -639,19 +640,72 @@ static void generate_esnt(struct uat_adsb_mdb *mdb)
 
 }
 
+static int use_tisb = 1;
+
+static int should_send(struct uat_adsb_mdb *mdb)
+{
+    switch (mdb->address_qualifier) {
+    case AQ_ADSB_ICAO:
+        return 1; // Real UAT
+    case AQ_TISB_ICAO:
+    case AQ_TISB_OTHER:
+        return use_tisb; // Only if TIS-B is enabled
+    default:
+        return 1;
+    }
+}
+
 static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
 {
     if (type == UAT_DOWNLINK) {
         struct uat_adsb_mdb mdb;
         uat_decode_adsb_mdb(frame, &mdb);
-        generate_esnt(&mdb);
+
+        if (should_send(&mdb)) {
+            generate_esnt(&mdb);
+        }
     }
 }        
+
+void usage(int argc, char **argv)
+{
+    fprintf(stderr,
+            "usage: %s [-t]\n"
+            "\n"
+            "Reads UAT downlink messages from stdin and writes ADS-B ES/NT messages\n"
+            "(1090MHz-style) to stdout.\n"
+            "\n"
+            "  -t   Disable forwarding of TIS-B traffic\n"
+            "  -h   Show this usage message\n",
+            argv[0]);
+}
 
 int main(int argc, char **argv)
 {
     struct dump978_reader *reader;
     int framecount;
+    int opt;
+
+    while ((opt = getopt(argc, argv, "ht")) > 0) {
+        switch (opt) {
+        case 'h':
+            usage(argc, argv);
+            return 0;
+
+        case 't':
+            use_tisb = 0;
+            break;
+
+        default:
+            usage(argc, argv);
+            return 1;
+        }
+    }
+
+    if (optind < argc) {
+        usage(argc, argv);
+        return 1;
+    }
 
     initCrcTables();
 
