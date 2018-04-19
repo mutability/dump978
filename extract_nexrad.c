@@ -264,7 +264,7 @@ void decode_nexrad(struct fisb_apdu *fisb)
     }
 }
 
-void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
+void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra, float ss)
 {
     if (type == UAT_UPLINK) {
         struct uat_uplink_mdb mdb;

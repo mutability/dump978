@@ -16,6 +16,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
@@ -151,8 +152,13 @@ static int process_line(struct dump978_reader *reader, frame_handler_t handler, 
         int byte;
                 
         if (p[0] == ';') {
+            p++;
+            float signal_strength = 0;
+            if (p[0] == 's')
+                sscanf(p, "ss=%f;", &signal_strength);
+
             // ignore rest of line
-            handler(frametype, reader->frame, len, handler_data);
+            handler(frametype, reader->frame, len, handler_data, signal_strength);
             return 1;
         }
         

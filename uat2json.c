@@ -64,6 +64,9 @@ struct aircraft {
 
     // if vert_rate_valid:
     int16_t vert_rate; // in ft/min
+
+    // signal strength in dBFS
+    float signal_strength;
 };        
 
 static struct aircraft *aircraft_list;
@@ -110,7 +113,7 @@ static void expire_old_aircraft()
 
 static uint32_t message_count;
 
-static void process_mdb(struct uat_adsb_mdb *mdb)
+static void process_mdb(struct uat_adsb_mdb *mdb, float signal_strength)
 {
     struct aircraft *a;
     uint32_t addr;
@@ -175,6 +178,8 @@ static void process_mdb(struct uat_adsb_mdb *mdb)
             a->altitude = mdb->sec_altitude;
         }
     }
+
+    a->signal_strength = signal_strength;
 }
 
 static int write_receiver_json(const char *dir)
@@ -257,8 +262,8 @@ static int write_aircraft_json(const char *dir)
             fprintf(f, ",\"track\":%u", a->track);
         if (a->speed_valid)
             fprintf(f, ",\"speed\":%u", a->speed);
-        fprintf(f, ",\"messages\":%u,\"seen\":%u,\"rssi\":0}",
-                a->messages, (unsigned) (NOW - a->last_seen));
+        fprintf(f, ",\"messages\":%u,\"seen\":%u,\"rssi\":%.1f}",
+                a->messages, (unsigned) (NOW - a->last_seen), a->signal_strength);
     }
 
     fprintf(f,
@@ -284,7 +289,7 @@ static void periodic_work()
     }
 }
 
-static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
+static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra, float signal_strength)
 {
     struct uat_adsb_mdb mdb;
 
@@ -308,7 +313,7 @@ static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra
 
     uat_decode_adsb_mdb(frame, &mdb);
     //uat_display_adsb_mdb(&mdb, stdout);    
-    process_mdb(&mdb);
+    process_mdb(&mdb, signal_strength);
 }                                                        
 
 static void read_loop()

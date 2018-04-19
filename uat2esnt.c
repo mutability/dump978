@@ -655,7 +655,7 @@ static int should_send(struct uat_adsb_mdb *mdb)
     }
 }
 
-static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
+static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra, float ss)
 {
     if (type == UAT_DOWNLINK) {
         struct uat_adsb_mdb mdb;
