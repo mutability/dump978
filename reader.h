@@ -30,10 +30,11 @@ typedef enum { UAT_UPLINK, UAT_DOWNLINK } frame_type_t;
 //   f: pointer to frame data buffer
 //   l: length of frame data
 //   d: value of handler_data passed to dump978_read_frames
+//  ss: measured signal strength in dBFS
 // The frame data buffer is a shared buffer owned by the caller
 // and may be reused after return; if the handler needs to
 // preserve the data after returning, it should take a copy.
-typedef void (*frame_handler_t)(frame_type_t t,uint8_t *f,int l,void *d);
+typedef void (*frame_handler_t)(frame_type_t t,uint8_t *f,int l,void *d, float ss);
 
 // Allocate a new reader that reads from file descriptor 'fd'.
 // If 'nonblock' is nonzero, the FD will be made nonblocking.

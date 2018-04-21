@@ -64,11 +64,15 @@ struct aircraft {
 
     // if vert_rate_valid:
     int16_t vert_rate; // in ft/min
+
+    // signal strength in dBFS
+    float signal_strength;
 };        
 
 static struct aircraft *aircraft_list;
 static time_t NOW;
 static const char *json_dir;
+static float rec_lat, rec_lon;
 
 static struct aircraft *find_aircraft(uint32_t address)
 {
@@ -110,7 +114,7 @@ static void expire_old_aircraft()
 
 static uint32_t message_count;
 
-static void process_mdb(struct uat_adsb_mdb *mdb)
+static void process_mdb(struct uat_adsb_mdb *mdb, float signal_strength)
 {
     struct aircraft *a;
     uint32_t addr;
@@ -175,9 +179,11 @@ static void process_mdb(struct uat_adsb_mdb *mdb)
             a->altitude = mdb->sec_altitude;
         }
     }
+
+    a->signal_strength = signal_strength;
 }
 
-static int write_receiver_json(const char *dir)
+static int write_receiver_json(const char *dir, int use_rec_pos)
 {
     char path[PATH_MAX];
     char path_new[PATH_MAX];
@@ -197,8 +203,20 @@ static int write_receiver_json(const char *dir)
             "{\n"
             "  \"version\" : \"dump978-uat2json\",\n"
             "  \"refresh\" : 1000,\n"
-            "  \"history\" : 0\n"
-            "}\n");
+            "  \"history\" : 0");
+ 
+    if (use_rec_pos) {
+        fprintf(f,
+                ",\n"
+                "  \"lat\" : %.5f,\n"
+                "  \"lon\" : %.5f\n",
+                rec_lat, rec_lon);
+    }
+    else {
+        fprintf(f, "\n");
+    }
+
+    fprintf(f, "}\n");
     fclose(f);
 
     if (rename(path_new, path) < 0) {
@@ -257,8 +275,8 @@ static int write_aircraft_json(const char *dir)
             fprintf(f, ",\"track\":%u", a->track);
         if (a->speed_valid)
             fprintf(f, ",\"speed\":%u", a->speed);
-        fprintf(f, ",\"messages\":%u,\"seen\":%u,\"rssi\":0}",
-                a->messages, (unsigned) (NOW - a->last_seen));
+        fprintf(f, ",\"messages\":%u,\"seen\":%u,\"rssi\":%.1f}",
+                a->messages, (unsigned) (NOW - a->last_seen), a->signal_strength);
     }
 
     fprintf(f,
@@ -284,7 +302,7 @@ static void periodic_work()
     }
 }
 
-static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
+static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra, float signal_strength)
 {
     struct uat_adsb_mdb mdb;
 
@@ -308,7 +326,7 @@ static void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra
 
     uat_decode_adsb_mdb(frame, &mdb);
     //uat_display_adsb_mdb(&mdb, stdout);    
-    process_mdb(&mdb);
+    process_mdb(&mdb, signal_strength);
 }                                                        
 
 static void read_loop()
@@ -353,22 +371,46 @@ static void read_loop()
     dump978_reader_free(reader);
 }                    
 
+void showHelp(void)
+{
+    fprintf(stderr,
+            "Syntax: uat2json [options] <dir>\n"
+            "\n"
+            "Reads UAT messages on stdin.\n"
+            "Periodically writes aircraft state to <dir>/aircraft.json\n"
+            "Also writes <dir>/receiver.json once on startup\n"
+            "\n"
+            "Options:\n"
+            "  --rec-pos <lat,lon>   Latitude and longitude of receiver (e.g. 84.12356,-80.67894).\n");
+}
+
 int main(int argc, char **argv)
 {
-    if (argc < 2) {
-        fprintf(stderr,
-                "Syntax: %s <dir>\n"
-                "\n"
-                "Reads UAT messages on stdin.\n"
-                "Periodically writes aircraft state to <dir>/aircraft.json\n"
-                "Also writes <dir>/receiver.json once on startup\n",
-                argv[0]);
+    int j, have_rec_pos = 0, have_json_dir = 0;
+    // Parse the command line options
+    for (j = 1; j < argc; j++) {
+        int more = j+1 < argc; // There are more arguments
+
+        if (!strcmp(argv[j],"--rec-pos") && more) {
+            have_rec_pos = sscanf(argv[++j], "%f,%f", &rec_lat, &rec_lon);
+            // verify we received both
+            if (have_rec_pos != 2) {
+                showHelp();
+                return 1;
+            }
+        }
+        else {
+            json_dir = argv[j];
+            have_json_dir = 1;
+        }
+    }
+
+    if (!have_json_dir) {
+        showHelp();
         return 1;
     }
 
-    json_dir = argv[1];
-
-    if (!write_receiver_json(json_dir)) {
+    if (!write_receiver_json(json_dir, have_rec_pos)) {
         fprintf(stderr, "Failed to write receiver.json - check permissions?\n");
         return 1;
     }

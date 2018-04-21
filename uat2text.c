@@ -21,7 +21,7 @@
 #include "uat_decode.h"
 #include "reader.h"
 
-void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
+void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra, float signal_strength)
 {
     if (type == UAT_DOWNLINK) {
         struct uat_adsb_mdb mdb;
@@ -33,7 +33,7 @@ void handle_frame(frame_type_t type, uint8_t *frame, int len, void *extra)
         uat_display_uplink_mdb(&mdb, stdout);
     }
 
-    fprintf(stdout, "\n");
+    fprintf(stdout, "RSSI:               %.1f dBFS\n\n", signal_strength);
     fflush(stdout);
 }        
 
