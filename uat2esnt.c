@@ -624,7 +624,8 @@ static void checksum_and_send(uint8_t *frame, int len, uint32_t parity)
     frame[len-2] = (rem & 0x00FF00) >> 8;
     frame[len-1] = (rem & 0x0000FF);
 
-    fprintf(stdout, "*");
+    // Magic UAT timestamp (FF004D4C415500) and signal strength (00)
+    fprintf(stdout, "<FF004D4C415500");
     for (j = 0; j < len; j++)
         fprintf(stdout, "%02X", frame[j]);
     fprintf(stdout, ";\n");
